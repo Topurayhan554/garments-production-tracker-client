@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
 import {
   FiMail,
   FiLock,
@@ -11,59 +12,28 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 
 const Register = () => {
   const navigate = useNavigate();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    photoURL: "",
-    role: "buyer",
-    password: "",
-    confirmPassword: "",
-  });
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  // Password strength
-  const [passwordStrength, setPasswordStrength] = useState({
-    score: 0,
-    hasUpper: false,
-    hasLower: false,
-    hasNumber: false,
-    hasMinLength: false,
-  });
+  // Watch password for strength indicator
+  const watchPassword = watch("password", "");
 
-  // Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Check password strength
-    if (name === "password") {
-      checkPasswordStrength(value);
-    }
-
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  // Check password strength
-  const checkPasswordStrength = (password) => {
+  // Password strength calculation
+  const getPasswordStrength = () => {
+    const password = watchPassword;
     const hasUpper = /[A-Z]/.test(password);
     const hasLower = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
@@ -75,14 +45,16 @@ const Register = () => {
     if (hasNumber) score++;
     if (hasMinLength) score++;
 
-    setPasswordStrength({
+    return {
       score,
       hasUpper,
       hasLower,
       hasNumber,
       hasMinLength,
-    });
+    };
   };
+
+  const passwordStrength = getPasswordStrength();
 
   // Get password strength color
   const getPasswordStrengthColor = () => {
@@ -100,107 +72,19 @@ const Register = () => {
     return "Strong";
   };
 
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.trim().length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
-    }
-
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    // Photo URL validation (optional but if provided, must be valid URL)
-    if (formData.photoURL && !/^https?:\/\/.+\..+/.test(formData.photoURL)) {
-      newErrors.photoURL = "Please enter a valid URL";
-    }
-
-    // Role validation
-    if (!formData.role) {
-      newErrors.role = "Please select a role";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (!passwordStrength.hasUpper) {
-      newErrors.password =
-        "Password must contain at least one uppercase letter";
-    } else if (!passwordStrength.hasLower) {
-      newErrors.password =
-        "Password must contain at least one lowercase letter";
-    } else if (!passwordStrength.hasMinLength) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // TODO: Implement your register logic here
-    try {
-      // Prepare data (exclude confirmPassword, add status)
-      const registerData = {
-        name: formData.name,
-        email: formData.email,
-        photoURL: formData.photoURL || "",
-        role: formData.role,
-        password: formData.password,
-        status: "pending", // Default status
-      };
-
-      // Example: await register(registerData);
-
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Register data:", registerData);
-        // Show success message or navigate
-        // navigate('/login');
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      setErrors({
-        submit: error.message || "Registration failed. Please try again.",
-      });
-      setIsLoading(false);
-    }
+  // Form submit handler
+  const handleRegister = (data) => {
+    console.log(data);
   };
 
   // Handle Google signup
   const handleGoogleSignup = async () => {
-    // TODO: Implement Google signup
-    console.log("Google signup clicked");
-  };
-
-  // Handle GitHub signup
-  const handleGithubSignup = async () => {
-    // TODO: Implement GitHub signup
-    console.log("GitHub signup clicked");
+    try {
+      // TODO: Implement Google signup
+      console.log("Google signup clicked");
+    } catch (error) {
+      console.error("Google signup error:", error);
+    }
   };
 
   return (
@@ -237,19 +121,12 @@ const Register = () => {
             {/* Social Signup Buttons */}
             <div className="space-y-3 mb-6">
               <button
+                type="button"
                 onClick={handleGoogleSignup}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
                 <FcGoogle className="w-5 h-5" />
                 <span>Sign up with Google</span>
-              </button>
-
-              <button
-                onClick={handleGithubSignup}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-600 rounded-xl text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-              >
-                <FaGithub className="w-5 h-5" />
-                <span>Sign up with GitHub</span>
               </button>
             </div>
 
@@ -265,18 +142,18 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Error Message */}
-            {errors.submit && (
+            {/* Submit Error Message */}
+            {submitError && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
                 <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  {errors.submit}
+                  {submitError}
                 </p>
               </div>
             )}
 
             {/* Register Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit(handleRegister)} className="space-y-5">
               {/* Name Input */}
               <div>
                 <label
@@ -290,24 +167,28 @@ const Register = () => {
                     <FiUser className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("name", {
+                      required: "Name is required",
+                      minLength: {
+                        value: 3,
+                        message: "Name must be at least 3 characters",
+                      },
+                    })}
                     id="name"
-                    name="name"
                     type="text"
                     autoComplete="name"
-                    value={formData.name}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                       errors.name
                         ? "border-red-300 dark:border-red-600"
                         : "border-gray-300 dark:border-gray-600"
                     }`}
-                    placeholder="John Doe"
+                    placeholder="Your Name"
                   />
                 </div>
                 {errors.name && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.name}
+                    {errors.name.message}
                   </p>
                 )}
               </div>
@@ -325,24 +206,28 @@ const Register = () => {
                     <FiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                      },
+                    })}
                     id="email"
-                    name="email"
                     type="email"
                     autoComplete="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                       errors.email
                         ? "border-red-300 dark:border-red-600"
                         : "border-gray-300 dark:border-gray-600"
                     }`}
-                    placeholder="john@example.com"
+                    placeholder="topu@example.com"
                   />
                 </div>
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.email}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -360,11 +245,14 @@ const Register = () => {
                     <FiImage className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("photoURL", {
+                      pattern: {
+                        value: /^https?:\/\/.+\..+/,
+                        message: "Please enter a valid URL",
+                      },
+                    })}
                     id="photoURL"
-                    name="photoURL"
                     type="url"
-                    value={formData.photoURL}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                       errors.photoURL
                         ? "border-red-300 dark:border-red-600"
@@ -376,7 +264,7 @@ const Register = () => {
                 {errors.photoURL && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.photoURL}
+                    {errors.photoURL.message}
                   </p>
                 )}
               </div>
@@ -390,10 +278,10 @@ const Register = () => {
                   Select Role
                 </label>
                 <select
+                  {...register("role", {
+                    required: "Please select a role",
+                  })}
                   id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
                   className={`block w-full px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                     errors.role
                       ? "border-red-300 dark:border-red-600"
@@ -406,7 +294,7 @@ const Register = () => {
                 {errors.role && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.role}
+                    {errors.role.message}
                   </p>
                 )}
               </div>
@@ -424,12 +312,24 @@ const Register = () => {
                     <FiLock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                      validate: {
+                        hasUpper: (value) =>
+                          /[A-Z]/.test(value) ||
+                          "Password must contain at least one uppercase letter",
+                        hasLower: (value) =>
+                          /[a-z]/.test(value) ||
+                          "Password must contain at least one lowercase letter",
+                      },
+                    })}
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    value={formData.password}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                       errors.password
                         ? "border-red-300 dark:border-red-600"
@@ -451,7 +351,7 @@ const Register = () => {
                 </div>
 
                 {/* Password Strength Indicator */}
-                {formData.password && (
+                {watchPassword && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -470,19 +370,31 @@ const Register = () => {
                     {/* Password Requirements */}
                     <div className="space-y-1">
                       <div
-                        className={`flex items-center gap-2 text-xs ${passwordStrength.hasMinLength ? "text-green-600 dark:text-green-400" : "text-gray-500"}`}
+                        className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.hasMinLength
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500"
+                        }`}
                       >
                         <FiCheckCircle className="w-3 h-3" />
                         <span>At least 6 characters</span>
                       </div>
                       <div
-                        className={`flex items-center gap-2 text-xs ${passwordStrength.hasUpper ? "text-green-600 dark:text-green-400" : "text-gray-500"}`}
+                        className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.hasUpper
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500"
+                        }`}
                       >
                         <FiCheckCircle className="w-3 h-3" />
                         <span>One uppercase letter</span>
                       </div>
                       <div
-                        className={`flex items-center gap-2 text-xs ${passwordStrength.hasLower ? "text-green-600 dark:text-green-400" : "text-gray-500"}`}
+                        className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.hasLower
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500"
+                        }`}
                       >
                         <FiCheckCircle className="w-3 h-3" />
                         <span>One lowercase letter</span>
@@ -494,7 +406,7 @@ const Register = () => {
                 {errors.password && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.password}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
@@ -512,12 +424,14 @@ const Register = () => {
                     <FiLock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === watch("password") || "Passwords do not match",
+                    })}
                     id="confirmPassword"
-                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
                       errors.confirmPassword
                         ? "border-red-300 dark:border-red-600"
@@ -540,7 +454,7 @@ const Register = () => {
                 {errors.confirmPassword && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.confirmPassword}
+                    {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
@@ -548,10 +462,10 @@ const Register = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"

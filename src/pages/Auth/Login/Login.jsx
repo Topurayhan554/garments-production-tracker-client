@@ -1,97 +1,41 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  // Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // TODO: Implement your login logic here
-    try {
-      // Example: await login(formData.email, formData.password);
-
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Login data:", formData);
-        // Show success message or navigate
-        // navigate('/dashboard');
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      setErrors({ submit: error.message || "Login failed. Please try again." });
-      setIsLoading(false);
-    }
+  // Form submit handler
+  const handleLogin = (data) => {
+    console.log(data);
   };
 
   // Handle Google login
   const handleGoogleLogin = async () => {
-    // TODO: Implement Google login
-    console.log("Google login clicked");
-  };
-
-  // Handle GitHub login
-  const handleGithubLogin = async () => {
-    // TODO: Implement GitHub login
-    console.log("GitHub login clicked");
+    try {
+      // TODO: Implement Google login
+      console.log("Google login clicked");
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
   };
 
   return (
@@ -128,19 +72,12 @@ const Login = () => {
             {/* Social Login Buttons */}
             <div className="space-y-3 mb-6">
               <button
+                type="button"
                 onClick={handleGoogleLogin}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
                 <FcGoogle className="w-5 h-5" />
                 <span>Continue with Google</span>
-              </button>
-
-              <button
-                onClick={handleGithubLogin}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-600 rounded-xl text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-              >
-                <FaGithub className="w-5 h-5" />
-                <span>Continue with GitHub</span>
               </button>
             </div>
 
@@ -156,18 +93,18 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Error Message */}
-            {errors.submit && (
+            {/* Submit Error Message */}
+            {submitError && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
                 <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  {errors.submit}
+                  {submitError}
                 </p>
               </div>
             )}
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit(handleLogin)} className="space-y-5">
               {/* Email Input */}
               <div>
                 <label
@@ -181,24 +118,28 @@ const Login = () => {
                     <FiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                      },
+                    })}
                     id="email"
-                    name="email"
                     type="email"
                     autoComplete="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                       errors.email
                         ? "border-red-300 dark:border-red-600"
                         : "border-gray-300 dark:border-gray-600"
                     }`}
-                    placeholder="john@example.com"
+                    placeholder="topu@example.com"
                   />
                 </div>
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.email}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -216,12 +157,16 @@ const Login = () => {
                     <FiLock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                    })}
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
-                    value={formData.password}
-                    onChange={handleChange}
                     className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                       errors.password
                         ? "border-red-300 dark:border-red-600"
@@ -244,7 +189,7 @@ const Login = () => {
                 {errors.password && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <FiAlertCircle className="w-4 h-4" />
-                    {errors.password}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
@@ -253,13 +198,13 @@ const Login = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
-                    id="remember-me"
-                    name="remember-me"
+                    {...register("rememberMe")}
+                    id="rememberMe"
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                   />
                   <label
-                    htmlFor="remember-me"
+                    htmlFor="rememberMe"
                     className="ml-2 block text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
                   >
                     Remember me
@@ -279,10 +224,10 @@ const Login = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"

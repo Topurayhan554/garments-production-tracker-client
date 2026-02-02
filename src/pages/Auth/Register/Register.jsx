@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import {
   FiMail,
@@ -12,8 +12,13 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
+import useAuth from "../../../hooks/useAuth";
+import SocialLogin from "../SocialLogin/SocialLogin";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Register = () => {
+  const location = useLocation();
   const navigate = useNavigate();
 
   // React Hook Form
@@ -23,6 +28,8 @@ const Register = () => {
     watch,
     formState: { errors, isSubmitting },
   } = useForm();
+
+  const { signUpFunc, updateUserProfile } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -74,17 +81,46 @@ const Register = () => {
 
   // Form submit handler
   const handleRegister = (data) => {
-    console.log(data);
-  };
+    const profileImg = data.photo?.[0];
 
-  // Handle Google signup
-  const handleGoogleSignup = async () => {
-    try {
-      // TODO: Implement Google signup
-      console.log("Google signup clicked");
-    } catch (error) {
-      console.error("Google signup error:", error);
-    }
+    signUpFunc(data.email, data.password)
+      .then(() => {
+        const formData = new FormData();
+        formData.append("image", profileImg);
+
+        const image_API_URL = `https://api.imgbb.com/1/upload?key=${
+          import.meta.env.VITE_image_host_key
+        }`;
+
+        return axios.post(image_API_URL, formData);
+      })
+      .then((res) => {
+        const userProfile = {
+          displayName: data.name,
+          photoURL: res.data.data.url,
+        };
+
+        return updateUserProfile(userProfile);
+      })
+      .then(() => {
+        toast.success("Account created successfully!");
+        navigate(location?.state || "/");
+      })
+      .catch((error) => {
+        let message = "Registration failed. Please try again.";
+
+        if (error.code === "auth/email-already-in-use") {
+          message = "This email is already registered.";
+        } else if (error.code === "auth/weak-password") {
+          message = "Password should be at least 6 characters.";
+        } else if (error.code === "auth/invalid-email") {
+          message = "Invalid email address.";
+        } else if (error.response) {
+          message = "Image upload failed.";
+        }
+
+        toast.error(message);
+      });
   };
 
   return (
@@ -119,16 +155,7 @@ const Register = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-8">
             {/* Social Signup Buttons */}
-            <div className="space-y-3 mb-6">
-              <button
-                type="button"
-                onClick={handleGoogleSignup}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-              >
-                <FcGoogle className="w-5 h-5" />
-                <span>Sign up with Google</span>
-              </button>
-            </div>
+            <SocialLogin />
 
             {/* Divider */}
             <div className="relative mb-6">
@@ -232,41 +259,28 @@ const Register = () => {
                 )}
               </div>
 
-              {/* Photo URL Input */}
+              {/* Photo Upload */}
               <div>
                 <label
-                  htmlFor="photoURL"
+                  htmlFor="photo"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Photo URL <span className="text-gray-400">(Optional)</span>
+                  Photo <span className="text-gray-400">(Optional)</span>
                 </label>
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <FiImage className="h-5 w-5 text-gray-400" />
                   </div>
+
                   <input
-                    {...register("photoURL", {
-                      pattern: {
-                        value: /^https?:\/\/.+\..+/,
-                        message: "Please enter a valid URL",
-                      },
-                    })}
-                    id="photoURL"
-                    type="url"
-                    className={`block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
-                      errors.photoURL
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
-                    placeholder="https://example.com/photo.jpg"
+                    {...register("photo")}
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-all duration-200 border-gray-300 dark:border-gray-600"
                   />
                 </div>
-                {errors.photoURL && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                    <FiAlertCircle className="w-4 h-4" />
-                    {errors.photoURL.message}
-                  </p>
-                )}
               </div>
 
               {/* Role Selection */}
@@ -501,6 +515,7 @@ const Register = () => {
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
               <Link
+                state={location.state}
                 to="/login"
                 className="font-semibold text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300"
               >

@@ -11,6 +11,8 @@ import {
   FiPackage,
   FiHome,
 } from "react-icons/fi";
+import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +22,7 @@ const Navbar = () => {
 
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
+  const { user, setUser, logOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,10 +58,15 @@ const Navbar = () => {
 
   // Handle logout
   const handleLogout = () => {
-    // TODO: Implement your logout logic
-    setUser(null);
     setShowProfileMenu(false);
-    navigate("/login");
+
+    logOut()
+      .then(() => {
+        toast.success("Log-Out success!");
+      })
+      .catch((error) => {
+        toast.error(error.message || "Logout failed!");
+      });
   };
 
   // Navigation links
@@ -164,8 +171,7 @@ const Navbar = () => {
                   {/* User Avatar with Dropdown */}
                   <div
                     className="relative"
-                    onMouseEnter={() => setShowProfileMenu(true)}
-                    onMouseLeave={() => setShowProfileMenu(false)}
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
                   >
                     <button className="relative group">
                       <img
@@ -252,15 +258,6 @@ const Navbar = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Logout Button */}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all duration-300 hover:scale-105"
-                  >
-                    <FiLogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
                 </div>
               ) : (
                 // Auth Buttons (Not Logged In)

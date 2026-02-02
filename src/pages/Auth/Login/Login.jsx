@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
+
+import useAuth from "../../../hooks/useAuth";
+import SocialLogin from "../SocialLogin/SocialLogin";
+import { toast } from "react-toastify";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const { signInFunc } = useAuth();
 
   // React Hook Form
   const {
@@ -20,22 +23,33 @@ const Login = () => {
     },
   });
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  // Form submit handler
   const handleLogin = (data) => {
-    console.log(data);
-  };
+    signInFunc(data.email, data.password)
+      .then(() => {
+        toast.success("Logged in successfully!");
+        navigate(location?.state || "/");
+      })
+      .catch((error) => {
+        let message = "Something went wrong. Please try again.";
 
-  // Handle Google login
-  const handleGoogleLogin = async () => {
-    try {
-      // TODO: Implement Google login
-      console.log("Google login clicked");
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
+        if (error.code === "auth/user-not-found") {
+          message = "No account found with this email.";
+        } else if (error.code === "auth/wrong-password") {
+          message = "Incorrect password.";
+        } else if (error.code === "auth/invalid-email") {
+          message = "Invalid email address.";
+        } else if (error.code === "auth/too-many-requests") {
+          message = "Too many attempts. Try again later.";
+        }
+
+        toast.error(message);
+      });
   };
 
   return (
@@ -69,17 +83,7 @@ const Login = () => {
         {/* Login Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-8">
-            {/* Social Login Buttons */}
-            <div className="space-y-3 mb-6">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-              >
-                <FcGoogle className="w-5 h-5" />
-                <span>Continue with Google</span>
-              </button>
-            </div>
+            <SocialLogin />
 
             {/* Divider */}
             <div className="relative mb-6">
@@ -263,6 +267,7 @@ const Login = () => {
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
               <Link
+                state={location.state}
                 to="/register"
                 className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
               >

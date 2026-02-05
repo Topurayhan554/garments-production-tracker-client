@@ -49,7 +49,7 @@ const DashboardLayout = () => {
     },
     {
       name: "All Products",
-      path: "/dashboard/all-products",
+      path: "/all-products",
       icon: <FiPackage />,
     },
     {

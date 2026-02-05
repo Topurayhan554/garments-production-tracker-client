@@ -11,6 +11,12 @@ import AboutUs from "../pages/Home/AboutUs/AboutUs";
 import ContactUs from "../pages/Home/ContactUs/ContactUs";
 import ProductDetails from "../pages/Product/ProductDetails/ProductDetails";
 import AllProducts from "../pages/Product/AllProducts/AllProducts";
+import AddProduct from "../pages/Dashboard/manager/AddProducts";
+import ManageProducts from "../pages/Dashboard/manager/ManageProducts";
+import Overview from "../pages/Dashboard/Overview/Overview";
+import ManageUsers from "../pages/Dashboard/Admin/ManageUsers";
+import AllOrders from "../pages/Dashboard/Admin/AllOrders";
+import Analytics from "../pages/Dashboard/Admin/Analytics";
 
 export const router = createBrowserRouter([
   {
@@ -35,7 +41,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/product-details",
-        element: <ProductDetails />,
+        element: (
+          <PrivateRoute>
+            <ProductDetails />
+          </PrivateRoute>
+        ),
       },
     ],
   },
@@ -62,8 +72,33 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
+        index: true,
+        element: <Overview />,
+      },
+      {
         path: "my-orders",
         element: <MyOrders />,
+      },
+
+      {
+        path: "add-product",
+        element: <AddProduct />,
+      },
+      {
+        path: "manage-products",
+        element: <ManageProducts />,
+      },
+      {
+        path: "manage-users",
+        element: <ManageUsers />,
+      },
+      {
+        path: "all-orders",
+        element: <AllOrders />,
+      },
+      {
+        path: "analytics",
+        element: <Analytics />,
       },
     ],
   },

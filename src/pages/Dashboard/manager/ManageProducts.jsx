@@ -9,7 +9,6 @@ import {
   FiEye,
   FiCheckCircle,
   FiXCircle,
-  FiMoreVertical,
   FiDownload,
   FiUpload,
 } from "react-icons/fi";
@@ -18,141 +17,30 @@ import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
-const ManageProducts = () => {
-  //   const [isLoading, setIsLoading] = useState(true);
-  const [products, setProducts] = useState([]);
+import { ToastContainer, toast } from "react-toastify";
 
+const ManageProducts = () => {
+  const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [activeDropdown, setActiveDropdown] = useState(null);
 
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const { data = [], isLoading } = useQuery({
+
+  const {
+    data = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["myProducts", user?.email],
     queryFn: async () => {
       const res = await axiosSecure.get(`/products?email=${user.email}`);
       return res.data;
     },
   });
-
-  console.log("after save", products);
-
-  // Mock products data
-  //   const mockProducts = [
-  //     {
-  //       id: 1,
-  //       name: "Premium Cotton T-Shirt",
-  //       category: "T-Shirts",
-  //       price: 25.99,
-  //       stock: 45,
-  //       inStock: true,
-  //       image:
-  //         "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100",
-  //       sku: "TSH-001",
-  //       status: "active",
-  //       sales: 124,
-  //       createdAt: "2024-01-15",
-  //     },
-  //     {
-  //       id: 2,
-  //       name: "Classic Denim Jacket",
-  //       category: "Jackets",
-  //       price: 89.99,
-  //       stock: 23,
-  //       inStock: true,
-  //       image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100",
-  //       sku: "JKT-002",
-  //       status: "active",
-  //       sales: 89,
-  //       createdAt: "2024-01-14",
-  //     },
-  //     {
-  //       id: 3,
-  //       name: "Formal Business Shirt",
-  //       category: "Shirts",
-  //       price: 45.99,
-  //       stock: 67,
-  //       inStock: true,
-  //       image:
-  //         "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=100",
-  //       sku: "SHT-003",
-  //       status: "active",
-  //       sales: 156,
-  //       createdAt: "2024-01-13",
-  //     },
-  //     {
-  //       id: 4,
-  //       name: "Casual Polo Shirt",
-  //       category: "Polo",
-  //       price: 32.99,
-  //       stock: 0,
-  //       inStock: false,
-  //       image:
-  //         "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=100",
-  //       sku: "PLO-004",
-  //       status: "inactive",
-  //       sales: 92,
-  //       createdAt: "2024-01-12",
-  //     },
-  //     {
-  //       id: 5,
-  //       name: "Sports Jersey",
-  //       category: "Sports",
-  //       price: 39.99,
-  //       stock: 34,
-  //       inStock: true,
-  //       image:
-  //         "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=100",
-  //       sku: "SPT-005",
-  //       status: "active",
-  //       sales: 78,
-  //       createdAt: "2024-01-11",
-  //     },
-  //     {
-  //       id: 6,
-  //       name: "Winter Hoodie",
-  //       category: "Hoodies",
-  //       price: 54.99,
-  //       stock: 89,
-  //       inStock: true,
-  //       image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=100",
-  //       sku: "HOD-006",
-  //       status: "active",
-  //       sales: 203,
-  //       createdAt: "2024-01-10",
-  //     },
-  //     {
-  //       id: 7,
-  //       name: "Designer T-Shirt",
-  //       category: "T-Shirts",
-  //       price: 28.99,
-  //       stock: 12,
-  //       inStock: true,
-  //       image:
-  //         "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=100",
-  //       sku: "TSH-007",
-  //       status: "active",
-  //       sales: 67,
-  //       createdAt: "2024-01-09",
-  //     },
-  //     {
-  //       id: 8,
-  //       name: "Leather Jacket",
-  //       category: "Jackets",
-  //       price: 199.99,
-  //       stock: 5,
-  //       inStock: true,
-  //       image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100",
-  //       sku: "JKT-008",
-  //       status: "active",
-  //       sales: 45,
-  //       createdAt: "2024-01-08",
-  //     },
-  //   ];
 
   const categories = [
     { id: "all", name: "All Categories" },
@@ -165,7 +53,6 @@ const ManageProducts = () => {
   ];
 
   // Load products
-
   useEffect(() => {
     if (data?.length) {
       setProducts(data);
@@ -175,15 +62,11 @@ const ManageProducts = () => {
   // Filter products
   const getFilteredProducts = () => {
     return products.filter((product) => {
-      // Safe strings
       const name = product.name ? product.name.toLowerCase() : "";
       const sku = product.sku ? product.sku.toLowerCase() : "";
       const query = searchQuery.toLowerCase();
 
-      // Search filter
       const matchesSearch = name.includes(query) || sku.includes(query);
-
-      // Category filter
       const matchesCategory =
         selectedCategory === "all" || product.category === selectedCategory;
 
@@ -196,7 +79,7 @@ const ManageProducts = () => {
   // Handle select all
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedProducts(filteredProducts.map((p) => p.id));
+      setSelectedProducts(filteredProducts.map((p) => p._id || p.id));
     } else {
       setSelectedProducts([]);
     }
@@ -211,45 +94,108 @@ const ManageProducts = () => {
     }
   };
 
-  // Handle delete
+  // Handle delete click
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
 
-  const handleDeleteConfirm = () => {
-    // TODO: Implement actual delete
-    setProducts(products.filter((p) => p.id !== productToDelete.id));
-    setShowDeleteModal(false);
-    setProductToDelete(null);
-  };
+  // Handle delete confirm - FIXED
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
 
-  // Handle bulk delete
-  const handleBulkDelete = () => {
-    if (
-      window.confirm(`Delete ${selectedProducts.length} selected products?`)
-    ) {
-      setProducts(products.filter((p) => !selectedProducts.includes(p.id)));
-      setSelectedProducts([]);
+    try {
+      const id = productToDelete._id || productToDelete.id;
+      const res = await axiosSecure.delete(`/products/${id}`);
+
+      if (res.data.deletedCount) {
+        toast.success("Product deleted successfully!");
+
+        // Remove from local state
+        setProducts(products.filter((p) => (p._id || p.id) !== id));
+
+        // Refetch from server
+        refetch();
+      }
+    } catch (error) {
+
+
+      
+      console.error("Delete error:", error);
+      toast.error("Failed to delete product");
+    } finally {
+      setShowDeleteModal(false);
+      setProductToDelete(null);
     }
   };
 
-  // Handle status toggle
-  //   const handleStatusToggle = (productId) => {
-  //     setProducts(
-  //       products.map((p) =>
-  //         p.id === productId
-  //           ? { ...p, status: p.status === "active" ? "inactive" : "active" }
-  //           : p,
-  //       ),
-  //     );
-  //   };
+  // Handle bulk delete - FIXED
+  const handleBulkDelete = async () => {
+    if (
+      !window.confirm(`Delete ${selectedProducts.length} selected products?`)
+    ) {
+      return;
+    }
+
+    try {
+      // Delete multiple products
+      const deletePromises = selectedProducts.map((id) =>
+        axiosSecure.delete(`/products/${id}`),
+      );
+
+      await Promise.all(deletePromises);
+
+      toast.success(
+        `${selectedProducts.length} products deleted successfully!`,
+      );
+
+      // Remove from local state
+      setProducts(
+        products.filter((p) => !selectedProducts.includes(p._id || p.id)),
+      );
+
+      // Clear selection
+      setSelectedProducts([]);
+
+      // Refetch from server
+      refetch();
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+      toast.error("Failed to delete products");
+    }
+  };
+
+  // Handle status toggle - FIXED
+  const handleStatusToggle = async (productId) => {
+    const product = products.find((p) => (p._id || p.id) === productId);
+    if (!product) return;
+
+    const newStatus = product.status === "active" ? "inactive" : "active";
+
+    try {
+      const id = product._id || product.id;
+      await axiosSecure.patch(`/products/${id}/status`, { status: newStatus });
+
+      // Update local state
+      setProducts(
+        products.map((p) =>
+          (p._id || p.id) === productId ? { ...p, status: newStatus } : p,
+        ),
+      );
+
+      toast.success(`Product status changed to ${newStatus}`);
+      refetch();
+    } catch (error) {
+      console.error("Status toggle error:", error);
+      toast.error("Failed to update status");
+    }
+  };
 
   // Stats
   const stats = {
     total: products.length,
     active: products.filter((p) => p.status === "active").length,
-    outOfStock: products.filter((p) => !p.inStock).length,
+    outOfStock: products.filter((p) => !p.inStock || p.stock === 0).length,
     lowStock: products.filter((p) => p.inStock && p.stock < 20).length,
   };
 
@@ -257,14 +203,13 @@ const ManageProducts = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <h1>Products: {products.length}</h1>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="mb-4 md:mb-0">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
               Manage Products
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              View and manage all your products
+              View and manage all your products ({products.length})
             </p>
           </div>
 
@@ -421,7 +366,8 @@ const ManageProducts = () => {
                       <input
                         type="checkbox"
                         checked={
-                          selectedProducts.length === filteredProducts.length
+                          selectedProducts.length === filteredProducts.length &&
+                          filteredProducts.length > 0
                         }
                         onChange={handleSelectAll}
                         className="w-4 h-4 text-blue-600 rounded cursor-pointer"
@@ -451,103 +397,111 @@ const ManageProducts = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.includes(product.id)}
-                          onChange={() => handleSelectProduct(product.id)}
-                          className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-12 h-12 rounded-lg object-cover"
+                  {filteredProducts.map((product) => {
+                    const productId = product._id || product.id;
+                    return (
+                      <tr
+                        key={productId}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      >
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedProducts.includes(productId)}
+                            onChange={() => handleSelectProduct(productId)}
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer"
                           />
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {product.name}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              SKU: {product.sku}
-                            </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={product.images?.[0] || "/placeholder.png"}
+                              alt={product.name}
+                              className="w-12 h-12 rounded-lg object-cover"
+                              onError={(e) => {
+                                e.target.src = "/placeholder.png";
+                              }}
+                            />
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {product.name}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                SKU: {product.sku || "N/A"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-semibold">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          ${product.price}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`font-semibold ${
-                            product.stock === 0
-                              ? "text-red-600 dark:text-red-400"
-                              : product.stock < 20
-                                ? "text-yellow-600 dark:text-yellow-400"
-                                : "text-green-600 dark:text-green-400"
-                          }`}
-                        >
-                          {product.stock}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-900 dark:text-white">
-                          {product.sales}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleStatusToggle(product.id)}
-                          className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
-                            product.status === "active"
-                              ? "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          {product.status === "active" ? "Active" : "Inactive"}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/product/${product.id}`}
-                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                            title="View"
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-semibold">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            ${product.price}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`font-semibold ${
+                              product.stock === 0
+                                ? "text-red-600 dark:text-red-400"
+                                : product.stock < 20
+                                  ? "text-yellow-600 dark:text-yellow-400"
+                                  : "text-green-600 dark:text-green-400"
+                            }`}
                           >
-                            <FiEye className="w-5 h-5" />
-                          </Link>
-                          <Link
-                            to={`/dashboard/edit-product/${product.id}`}
-                            className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
-                            title="Edit"
-                          >
-                            <FiEdit className="w-5 h-5" />
-                          </Link>
+                            {product.stock || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-900 dark:text-white">
+                            {product.sales || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
                           <button
-                            onClick={() => handleDeleteClick(product)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                            title="Delete"
+                            onClick={() => handleStatusToggle(productId)}
+                            className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                              product.status === "active"
+                                ? "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                            }`}
                           >
-                            <FiTrash2 className="w-5 h-5" />
+                            {product.status === "active"
+                              ? "Active"
+                              : "Inactive"}
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              to={`/product/${productId}`}
+                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                              title="View"
+                            >
+                              <FiEye className="w-5 h-5" />
+                            </Link>
+                            <Link
+                              to={`/dashboard/edit-product/${productId}`}
+                              className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
+                              title="Edit"
+                            >
+                              <FiEdit className="w-5 h-5" />
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteClick(product)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                              title="Delete"
+                            >
+                              <FiTrash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -609,6 +563,7 @@ const ManageProducts = () => {
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

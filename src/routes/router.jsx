@@ -17,6 +17,8 @@ import Overview from "../pages/Dashboard/Overview/Overview";
 import ManageUsers from "../pages/Dashboard/Admin/ManageUsers";
 import AllOrders from "../pages/Dashboard/Admin/AllOrders";
 import Analytics from "../pages/Dashboard/Admin/Analytics";
+import PendingOrders from "../pages/Dashboard/manager/PendingOrders";
+import ApprovedOrders from "../pages/Dashboard/manager/ApporovedOrders";
 
 export const router = createBrowserRouter([
   {
@@ -99,6 +101,14 @@ export const router = createBrowserRouter([
       {
         path: "analytics",
         element: <Analytics />,
+      },
+      {
+        path: "pending-orders",
+        element: <PendingOrders />,
+      },
+      {
+        path: "approved-orders",
+        element: <ApprovedOrders />,
       },
     ],
   },

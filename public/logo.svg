@@ -1,0 +1,17 @@
+<svg id="logo3" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1"/>
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Hexagon Background -->
+                    <polygon points="100,20 170,60 170,140 100,180 30,140 30,60" fill="url(#grad3)"/>
+                    
+                    <!-- Shirt Outline -->
+                    <path d="M 75 70 L 65 80 L 65 95 L 75 95 L 75 130 L 125 130 L 125 95 L 135 95 L 135 80 L 125 70 L 115 75 Q 107 68 100 68 Q 93 68 85 75 Z" fill="none" stroke="white" stroke-width="4"/>
+                    
+                    <!-- Checkmark -->
+                    <path d="M 85 100 L 95 110 L 115 85" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                </svg>

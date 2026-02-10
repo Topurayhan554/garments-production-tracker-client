@@ -256,7 +256,7 @@ const AllProducts = () => {
       case "popular":
         filtered.sort((a, b) => b.reviews - a.reviews);
         break;
-      default: // newest
+      default:
         break;
     }
 

@@ -17,6 +17,7 @@ import {
   FiSettings,
   FiTrendingUp,
 } from "react-icons/fi";
+import { ToastContainer } from "react-toastify";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -322,6 +323,7 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 };

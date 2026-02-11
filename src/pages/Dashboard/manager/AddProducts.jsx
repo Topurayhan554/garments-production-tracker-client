@@ -182,6 +182,7 @@ const AddProduct = () => {
         price: Number(data.price),
         originalPrice: Number(data.originalPrice || 0),
         stock: Number(data.stock),
+        createdAt: new Date(),
       };
 
       // 4. Save to MongoDB

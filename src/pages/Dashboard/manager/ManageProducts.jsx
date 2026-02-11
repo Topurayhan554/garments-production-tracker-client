@@ -11,12 +11,12 @@ import {
   FiXCircle,
   FiDownload,
   FiUpload,
+  FiX,
 } from "react-icons/fi";
 import { SkeletonTable } from "../../../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
-
 import { ToastContainer, toast } from "react-toastify";
 
 const ManageProducts = () => {
@@ -26,6 +26,8 @@ const ManageProducts = () => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
@@ -100,33 +102,39 @@ const ManageProducts = () => {
     setShowDeleteModal(true);
   };
 
-  // Handle delete confirm - FIXED
+  // Handle view details
+  const handleViewDetails = (product) => {
+    setSelectedProduct(product);
+    setShowDetailsModal(true);
+  };
+
+  // Handle delete confirm - ✅ FIXED with await
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
 
-    try {
-      const id = productToDelete._id || productToDelete.id;
-      const res = await axiosSecure.delete(`/products/${id}`);
+    const id = productToDelete._id || productToDelete.id;
 
-      if (res.data.deletedCount) {
-        toast.success("Product deleted successfully!");
+    axiosSecure
+      .delete(`/products/${id}`)
+      .then((res) => {
+        // console.log(res.data);
+        if (res.data) {
+          toast.success("Product deleted successfully!");
+          setProducts(products.filter((p) => (p._id || p.id) !== id));
 
-        // Remove from local state
-        setProducts(products.filter((p) => (p._id || p.id) !== id));
+          // Refetch from server
+          refetch();
 
-        // Refetch from server
-        refetch();
-      }
-    } catch (error) {
-
-
-      
-      console.error("Delete error:", error);
-      toast.error("Failed to delete product");
-    } finally {
-      setShowDeleteModal(false);
-      setProductToDelete(null);
-    }
+          setShowDeleteModal(false);
+          setProductToDelete(null);
+        } else {
+          toast.error("Failed to delete product");
+        }
+      })
+      .catch((error) => {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete product");
+      });
   };
 
   // Handle bulk delete - FIXED
@@ -292,7 +300,6 @@ const ManageProducts = () => {
         {/* Search & Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -304,7 +311,6 @@ const ManageProducts = () => {
               />
             </div>
 
-            {/* Category Filter */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -317,7 +323,6 @@ const ManageProducts = () => {
               ))}
             </select>
 
-            {/* Bulk Actions */}
             {selectedProducts.length > 0 && (
               <div className="flex gap-2">
                 <button
@@ -476,13 +481,13 @@ const ManageProducts = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <Link
-                              to={`/product/${productId}`}
+                            <button
+                              onClick={() => handleViewDetails(product)}
                               className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
                               title="View"
                             >
                               <FiEye className="w-5 h-5" />
-                            </Link>
+                            </button>
                             <Link
                               to={`/dashboard/edit-product/${productId}`}
                               className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
@@ -507,7 +512,6 @@ const ManageProducts = () => {
             </div>
           )}
 
-          {/* Table Footer */}
           {filteredProducts.length > 0 && (
             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -563,6 +567,220 @@ const ManageProducts = () => {
           </div>
         </div>
       )}
+
+      {/* Product Details Modal */}
+      {showDetailsModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full my-8">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Product Details
+              </h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {/* Product Images */}
+              <div className="mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedProduct.images?.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image || "/placeholder.png"}
+                      alt={`${selectedProduct.name} - ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.src = "/placeholder.png";
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Product Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Product Name
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                    {selectedProduct.name}
+                  </p>
+                </div>
+
+                {/* SKU */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    SKU
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                    {selectedProduct.sku || "N/A"}
+                  </p>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Category
+                  </label>
+                  <p className="mt-1">
+                    <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-semibold">
+                      {selectedProduct.category}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Price
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                    ${selectedProduct.price}
+                  </p>
+                </div>
+
+                {/* Stock */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Stock
+                  </label>
+                  <p
+                    className={`text-lg font-bold mt-1 ${
+                      selectedProduct.stock === 0
+                        ? "text-red-600 dark:text-red-400"
+                        : selectedProduct.stock < 20
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : "text-green-600 dark:text-green-400"
+                    }`}
+                  >
+                    {selectedProduct.stock || 0} units
+                  </p>
+                </div>
+
+                {/* Sales */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Total Sales
+                  </label>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                    {selectedProduct.sales || 0} units
+                  </p>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Status
+                  </label>
+                  <p className="mt-1">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${
+                        selectedProduct.status === "active"
+                          ? "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      {selectedProduct.status === "active"
+                        ? "Active"
+                        : "Inactive"}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Brand */}
+                {selectedProduct.brand && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                      Brand
+                    </label>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                      {selectedProduct.brand}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {selectedProduct.description && (
+                <div className="mt-6">
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Description
+                  </label>
+                  <p className="text-gray-900 dark:text-white mt-2 leading-relaxed">
+                    {selectedProduct.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Sizes */}
+              {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
+                <div className="mt-6">
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                    Available Sizes
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.sizes.map((size, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-semibold"
+                      >
+                        {size}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Colors */}
+              {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                <div className="mt-6">
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                    Available Colors
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.colors.map((color, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-semibold"
+                      >
+                        {color}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              >
+                Close
+              </button>
+              <Link
+                to={`/dashboard/edit-product/${selectedProduct._id || selectedProduct.id}`}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition flex items-center gap-2"
+                onClick={() => setShowDetailsModal(false)}
+              >
+                <FiEdit className="w-5 h-5" />
+                Edit Product
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer />
     </div>
   );

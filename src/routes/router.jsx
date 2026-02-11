@@ -19,6 +19,7 @@ import AllOrders from "../pages/Dashboard/Admin/AllOrders";
 import Analytics from "../pages/Dashboard/Admin/Analytics";
 import PendingOrders from "../pages/Dashboard/manager/PendingOrders";
 import ApprovedOrders from "../pages/Dashboard/manager/ApporovedOrders";
+import EditProduct from "../pages/Dashboard/manager/EditProduct";
 
 export const router = createBrowserRouter([
   {
@@ -109,6 +110,11 @@ export const router = createBrowserRouter([
       {
         path: "approved-orders",
         element: <ApprovedOrders />,
+      },
+      // edit product
+      {
+        path: "edit-product/:id",
+        element: <EditProduct />,
       },
     ],
   },

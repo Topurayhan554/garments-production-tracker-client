@@ -9,9 +9,8 @@ const axiosSecure = axios.create({
 const useAxiosSecure = () => {
   const { user } = useAuth();
   useEffect(() => {
-    
     axiosSecure.interceptors.request.use((config) => {
-      config.headers.Authorization = `Bearer ${user.accessToken}`;
+      config.headers.Authorization = `Bearer ${user?.accessToken}`;
       return config;
     });
   }, [user]);

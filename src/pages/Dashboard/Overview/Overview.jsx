@@ -25,7 +25,7 @@ const Overview = () => {
   const user = {
     name: "John Doe",
     email: "john@example.com",
-    role: "manager", // 'admin', 'manager', or 'buyer'
+    role: "buyer", // 'admin', 'manager', or 'buyer'
     avatar: "https://i.pravatar.cc/100?img=12",
   };
 

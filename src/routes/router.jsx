@@ -6,7 +6,6 @@ import Login from "../pages/Auth/Login/Login";
 import Register from "../pages/Auth/Register/Register";
 import PrivateRoute from "./PrivateRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
-import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 import AboutUs from "../pages/Home/AboutUs/AboutUs";
 import ContactUs from "../pages/Home/ContactUs/ContactUs";
 import ProductDetails from "../pages/Product/ProductDetails/ProductDetails";
@@ -20,6 +19,8 @@ import Analytics from "../pages/Dashboard/Admin/Analytics";
 import PendingOrders from "../pages/Dashboard/manager/PendingOrders";
 import ApprovedOrders from "../pages/Dashboard/manager/ApporovedOrders";
 import EditProduct from "../pages/Dashboard/manager/EditProduct";
+import MyOrders from "../pages/Dashboard/buyer/MyOrders";
+import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
 
 export const router = createBrowserRouter([
   {
@@ -78,10 +79,6 @@ export const router = createBrowserRouter([
         index: true,
         element: <Overview />,
       },
-      {
-        path: "my-orders",
-        element: <MyOrders />,
-      },
 
       {
         path: "add-product",
@@ -110,6 +107,15 @@ export const router = createBrowserRouter([
       {
         path: "approved-orders",
         element: <ApprovedOrders />,
+      },
+      // buyer
+      {
+        path: "my-orders",
+        element: <MyOrders />,
+      },
+      {
+        path: "track-order",
+        element: <TrackOrder />,
       },
       // edit product
       {

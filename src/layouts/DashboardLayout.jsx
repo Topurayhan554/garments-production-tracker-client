@@ -30,7 +30,7 @@ const DashboardLayout = () => {
     name: "John Doe",
     email: "john@example.com",
     photoURL: "https://i.pravatar.cc/150?img=12",
-    role: "buyer", // Change to 'admin' or 'manager' to test different views
+    role: "manager", // Change to 'admin' or 'manager' to test different views
     status: "approved",
   };
 

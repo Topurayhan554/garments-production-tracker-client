@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
+import { useCart } from "../../../context/CartContext";
+import { toast } from "react-toastify";
 import {
   FiStar,
   FiHeart,
@@ -13,6 +15,7 @@ import {
   FiShare2,
   FiChevronLeft,
   FiChevronRight,
+  FiShoppingBag,
 } from "react-icons/fi";
 import PageLoader from "../../../components/PageLoader";
 
@@ -28,6 +31,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const { addToCart } = useCart();
 
   // Mock product data - Replace with actual API call
   const mockProduct = {
@@ -150,7 +154,6 @@ const ProductDetails = () => {
   // Load product
   useEffect(() => {
     setIsLoading(true);
-    // Simulate API call
     setTimeout(() => {
       setProduct(mockProduct);
       setIsLoading(false);
@@ -169,11 +172,11 @@ const ProductDetails = () => {
   // Handle add to cart
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
-      alert("Please select size and color");
+      toast.warning("Please select size and color");
       return;
     }
 
-    const cartItem = {
+    addToCart({
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -181,11 +184,40 @@ const ProductDetails = () => {
       size: selectedSize,
       color: selectedColor,
       image: product.images[0],
-    };
+    });
 
-    console.log("Added to cart:", cartItem);
-    // TODO: Implement actual cart functionality
-    alert("Product added to cart!");
+    toast.success("Added to cart! 🛒");
+  };
+
+  // Handle Order Now - NEW
+  const handleOrderNow = () => {
+    if (!selectedSize || !selectedColor) {
+      alert("Please select size and color first");
+      return;
+    }
+
+    navigate("/place-order", {
+      state: {
+        product: {
+          id: product.id,
+          name: product.name,
+          image: product.images[0],
+          price: product.price,
+          category: product.category,
+          sizes: product.sizes,
+          colors: product.colors.map((c) => ({
+            name: c.name,
+            hex: c.code,
+          })),
+        },
+        size: selectedSize,
+        color: {
+          name: selectedColor,
+          hex: product.colors.find((c) => c.name === selectedColor)?.code,
+        },
+        quantity,
+      },
+    });
   };
 
   if (isLoading) {
@@ -460,34 +492,63 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 mb-8">
+            {/* ✅ Action Buttons - Order Now ADDED */}
+            <div className="flex flex-col gap-3 mb-8">
+              {/* Order Now Button - PRIMARY */}
               <button
-                onClick={handleAddToCart}
+                onClick={handleOrderNow}
                 disabled={!product.inStock}
-                className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FiShoppingCart className="w-5 h-5" />
-                Add to Cart
+                <FiShoppingBag className="w-6 h-6" />
+                Order Now
               </button>
 
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-4 border-2 rounded-xl transition ${
-                  isFavorite
-                    ? "border-red-600 bg-red-600 text-white"
-                    : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-red-600"
-                }`}
-              >
-                <FiHeart
-                  className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`}
-                />
-              </button>
+              {/* Add to Cart + Wishlist row */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!product.inStock}
+                  className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiShoppingCart className="w-5 h-5" />
+                  Add to Cart
+                </button>
 
-              <button className="p-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:border-blue-600 transition">
-                <FiShare2 className="w-6 h-6" />
-              </button>
+                <button
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={`p-4 border-2 rounded-xl transition ${
+                    isFavorite
+                      ? "border-red-600 bg-red-600 text-white"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-red-600"
+                  }`}
+                >
+                  <FiHeart
+                    className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`}
+                  />
+                </button>
+
+                <button className="p-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:border-blue-600 transition">
+                  <FiShare2 className="w-6 h-6" />
+                </button>
+              </div>
             </div>
+
+            {/* ✅ Selection warning - shows if size/color not selected */}
+            {(!selectedSize || !selectedColor) && (
+              <div className="mb-4 px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl text-sm text-yellow-700 dark:text-yellow-400 flex items-center gap-2">
+                <span>⚠️</span>
+                <span>
+                  Please select{" "}
+                  {!selectedSize && !selectedColor
+                    ? "size and color"
+                    : !selectedSize
+                      ? "a size"
+                      : "a color"}{" "}
+                  to proceed with order
+                </span>
+              </div>
+            )}
 
             {/* Features */}
             <div className="grid grid-cols-3 gap-4 p-6 bg-gray-100 dark:bg-gray-800 rounded-2xl">
@@ -529,36 +590,21 @@ const ProductDetails = () => {
           {/* Tab Headers */}
           <div className="border-b border-gray-200 dark:border-gray-700">
             <div className="flex gap-8 px-8">
-              <button
-                onClick={() => setActiveTab("description")}
-                className={`py-4 font-semibold transition border-b-2 ${
-                  activeTab === "description"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-blue-600"
-                }`}
-              >
-                Description
-              </button>
-              <button
-                onClick={() => setActiveTab("specifications")}
-                className={`py-4 font-semibold transition border-b-2 ${
-                  activeTab === "specifications"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-blue-600"
-                }`}
-              >
-                Specifications
-              </button>
-              <button
-                onClick={() => setActiveTab("reviews")}
-                className={`py-4 font-semibold transition border-b-2 ${
-                  activeTab === "reviews"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-blue-600"
-                }`}
-              >
-                Reviews ({product.reviews.length})
-              </button>
+              {["description", "specifications", "reviews"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 font-semibold transition border-b-2 capitalize ${
+                    activeTab === tab
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 dark:text-gray-400 hover:text-blue-600"
+                  }`}
+                >
+                  {tab === "reviews"
+                    ? `Reviews (${product.reviews.length})`
+                    : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -636,7 +682,6 @@ const ProductDetails = () => {
                           alt={review.user}
                           className="w-12 h-12 rounded-full"
                         />
-
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-bold text-gray-900 dark:text-white">
@@ -646,7 +691,6 @@ const ProductDetails = () => {
                               {new Date(review.date).toLocaleDateString()}
                             </span>
                           </div>
-
                           <div className="flex items-center gap-1 mb-3">
                             {[...Array(5)].map((_, i) => (
                               <FiStar
@@ -659,11 +703,9 @@ const ProductDetails = () => {
                               />
                             ))}
                           </div>
-
                           <p className="text-gray-700 dark:text-gray-300 mb-4">
                             {review.comment}
                           </p>
-
                           <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600">
                             Helpful ({review.helpful})
                           </button>
@@ -697,12 +739,10 @@ const ProductDetails = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 </div>
-
                 <div className="p-4">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-2">
                     {relatedProduct.name}
                   </h3>
-
                   <div className="flex items-center gap-1 mb-2">
                     {[...Array(5)].map((_, i) => (
                       <FiStar
@@ -715,7 +755,6 @@ const ProductDetails = () => {
                       />
                     ))}
                   </div>
-
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-bold text-blue-600">
                       ${relatedProduct.price}

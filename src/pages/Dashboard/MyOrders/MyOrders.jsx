@@ -767,10 +767,13 @@ const MyOrders = () => {
 
             <div className="mt-6 flex gap-3">
               {selectedOrderDetails.trackingNumber && (
-                <button className="flex-1 px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 rounded-xl font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center justify-center gap-2">
+                <Link
+                  to={"/dashboard/track-order"}
+                  className="flex-1 px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 rounded-xl font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center justify-center gap-2"
+                >
                   <FiTruck className="w-5 h-5" />
                   Track Order
-                </button>
+                </Link>
               )}
               <button
                 onClick={() => setShowDetailsModal(false)}

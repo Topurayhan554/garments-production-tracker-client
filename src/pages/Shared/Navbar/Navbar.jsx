@@ -10,15 +10,20 @@ import {
   FiShoppingBag,
   FiPackage,
   FiHome,
+  FiShoppingCart,
 } from "react-icons/fi";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
+import { useCart } from "../../../context/CartContext";
+import CartDropdown from "../../../components/CartDropDown";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [theme, setTheme] = useState("light");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const { totalItems } = useCart();
 
   const navigate = useNavigate();
 
@@ -165,6 +170,28 @@ const Navbar = () => {
                 )}
               </button>
 
+              {/* 🛒 Cart Icon */}
+              {user && (
+                <div className="relative">
+                  <button
+                    onClick={() => setCartOpen(!cartOpen)}
+                    className="hidden sm:flex w-11 h-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105"
+                  >
+                    <FiShoppingCart className="w-5 h-5" />
+                    {totalItems > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                        {totalItems > 99 ? "99+" : totalItems}
+                      </span>
+                    )}
+                  </button>
+
+                  <CartDropdown
+                    isOpen={cartOpen}
+                    onClose={() => setCartOpen(false)}
+                  />
+                </div>
+              )}
+
               {/* User Section (Desktop) */}
               {user ? (
                 <div className="hidden lg:flex items-center gap-3">
@@ -276,7 +303,6 @@ const Navbar = () => {
                   </Link>
                 </div>
               )}
-
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsOpen(!isOpen)}

@@ -19,8 +19,10 @@ import Analytics from "../pages/Dashboard/Admin/Analytics";
 import PendingOrders from "../pages/Dashboard/manager/PendingOrders";
 import ApprovedOrders from "../pages/Dashboard/manager/ApporovedOrders";
 import EditProduct from "../pages/Dashboard/manager/EditProduct";
-import MyOrders from "../pages/Dashboard/buyer/MyOrders";
+import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
+import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
+import CartPage from "../pages/CartPage/CartPage";
 
 export const router = createBrowserRouter([
   {
@@ -44,10 +46,26 @@ export const router = createBrowserRouter([
         element: <AllProducts />,
       },
       {
-        path: "/product-details",
+        path: "/product/:id",
         element: (
           <PrivateRoute>
             <ProductDetails />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/place-order",
+        element: (
+          <PrivateRoute>
+            <PlaceOrder />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/cart-page",
+        element: (
+          <PrivateRoute>
+            <CartPage />
           </PrivateRoute>
         ),
       },
@@ -79,15 +97,12 @@ export const router = createBrowserRouter([
         index: true,
         element: <Overview />,
       },
+      {
+        path: "all-products",
+        element: <AllProducts />,
+      },
 
-      {
-        path: "add-product",
-        element: <AddProduct />,
-      },
-      {
-        path: "manage-products",
-        element: <ManageProducts />,
-      },
+      // admin
       {
         path: "manage-users",
         element: <ManageUsers />,
@@ -100,6 +115,17 @@ export const router = createBrowserRouter([
         path: "analytics",
         element: <Analytics />,
       },
+
+      // manager
+      {
+        path: "add-product",
+        element: <AddProduct />,
+      },
+      {
+        path: "manage-products",
+        element: <ManageProducts />,
+      },
+
       {
         path: "pending-orders",
         element: <PendingOrders />,
@@ -107,6 +133,11 @@ export const router = createBrowserRouter([
       {
         path: "approved-orders",
         element: <ApprovedOrders />,
+      },
+      // edit product
+      {
+        path: "edit-product/:id",
+        element: <EditProduct />,
       },
       // buyer
       {
@@ -116,11 +147,6 @@ export const router = createBrowserRouter([
       {
         path: "track-order",
         element: <TrackOrder />,
-      },
-      // edit product
-      {
-        path: "edit-product/:id",
-        element: <EditProduct />,
       },
     ],
   },

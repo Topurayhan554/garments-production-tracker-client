@@ -104,6 +104,7 @@ const ManageProducts = () => {
 
   // Handle view details
   const handleViewDetails = (product) => {
+    if (!product) return;
     setSelectedProduct(product);
     setShowDetailsModal(true);
   };
@@ -733,7 +734,7 @@ const ManageProducts = () => {
                         key={index}
                         className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-semibold"
                       >
-                        {size}
+                        {typeof size === "object" ? size.name : size}
                       </span>
                     ))}
                   </div>
@@ -752,7 +753,7 @@ const ManageProducts = () => {
                         key={index}
                         className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-semibold"
                       >
-                        {color}
+                        {typeof color === "object" ? color.name : color}
                       </span>
                     ))}
                   </div>

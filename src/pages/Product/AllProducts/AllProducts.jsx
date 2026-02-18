@@ -28,9 +28,9 @@ const AllProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
-  const axiosSecure = useAxiosSecure(); // ✅ Axios instance
+  const axiosSecure = useAxiosSecure();
 
-  // ✅ Categories - update করো DB data অনুযায়ী
+  // Categories - update
   const categories = [
     { id: "all", name: "All Products", count: products.length },
     {
@@ -65,7 +65,7 @@ const AllProducts = () => {
     },
   ];
 
-  // ✅ Load products from DB
+  //Load products from DB
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -406,17 +406,17 @@ const AllProducts = () => {
   );
 };
 
-// ✅ Product Card Component
+// Product Card Component
 const ProductCard = ({ product, viewMode }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
 
-  // ✅ Quick Add to Cart handler
+  // Quick Add to Cart handler
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Default size & color যদি না থাকে
+    // Default size & color
     const defaultSize = product.sizes?.[0] || "M";
     const defaultColor = product.colors?.[0]?.name || "Black";
 
@@ -433,7 +433,7 @@ const ProductCard = ({ product, viewMode }) => {
     toast.success("Added to cart! 🛒");
   };
 
-  // Grid View (আগের মতো, শুধু IDs fix করো)
+  // Grid View
   return (
     <div className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105">
       <div className="relative h-64 overflow-hidden">

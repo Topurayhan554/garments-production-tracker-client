@@ -12,10 +12,13 @@ import {
 } from "react-icons/fi";
 import ButtonLoader from "../../../components/ButtonLoader";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const {
     register,
@@ -26,6 +29,7 @@ const AddProduct = () => {
   } = useForm({
     defaultValues: {
       name: "",
+      sku: "",
       category: "",
       brand: "",
       price: "",
@@ -41,6 +45,7 @@ const AddProduct = () => {
       sleeveType: "",
       pattern: "",
       care: "",
+      email: user?.email || "",
     },
   });
 
@@ -78,6 +83,10 @@ const AddProduct = () => {
     { name: "Blue", code: "#0000FF" },
     { name: "Green", code: "#008000" },
     { name: "Yellow", code: "#FFFF00" },
+    { name: "Pink", code: "#FFC0CB" },
+    { name: "Orange", code: "#FFA500" },
+    { name: "Purple", code: "#800080" },
+    { name: "Brown", code: "#A52A2A" },
   ];
 
   // Handle image upload
@@ -85,7 +94,7 @@ const AddProduct = () => {
     const files = Array.from(e.target.files);
 
     if (files.length + images.length > 6) {
-      alert("Maximum 6 images allowed");
+      toast.warning("Maximum 6 images allowed");
       return;
     }
 
@@ -129,11 +138,38 @@ const AddProduct = () => {
     }
   };
 
+  // Generate SKU suggestion
+  const generateSKU = () => {
+    const category = watch("category");
+    const name = watch("name");
+
+    if (!category || !name) {
+      toast.warning("Please select category and enter product name first");
+      return;
+    }
+
+    const categoryPrefix = category.substring(0, 3).toUpperCase();
+    const namePrefix = name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 3);
+    const randomNum = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
+
+    const sku = `${categoryPrefix}-${namePrefix}${randomNum}`;
+    setValue("sku", sku);
+    toast.success("SKU generated!");
+  };
+
   // Form submit
   const onSubmit = async (data) => {
     setSubmitError("");
     setSubmitSuccess(false);
 
+    // Validations
     if (images.length === 0) {
       setSubmitError("Please upload at least one product image");
       return;
@@ -150,10 +186,12 @@ const AddProduct = () => {
     }
 
     try {
+      toast.info("Uploading images...");
+
       // 1. Upload all images to imgbb
       const uploadPromises = images.map((image) => {
         const formData = new FormData();
-        formData.append("image", image); // ✅ File here
+        formData.append("image", image);
 
         const image_API_URL = `https://api.imgbb.com/1/upload?key=${
           import.meta.env.VITE_image_host_key
@@ -163,8 +201,9 @@ const AddProduct = () => {
       });
 
       const uploadResponses = await Promise.all(uploadPromises);
-
       const imageUrls = uploadResponses.map((res) => res.data.data.display_url);
+
+      toast.success("Images uploaded successfully!");
 
       // 2. Calculate discount
       let discount = 0;
@@ -174,28 +213,79 @@ const AddProduct = () => {
         );
       }
 
-      // 3. Final product object
+      // 3. Process features (string → array)
+      const featuresArray = data.features
+        ? data.features
+            .split("\n")
+            .filter((f) => f.trim())
+            .map((f) => f.trim())
+        : [];
+
+      // 4. Build specifications array
+      const specifications = [
+        data.material && { label: "Material", value: data.material },
+        data.fitType && { label: "Fit", value: data.fitType },
+        data.neckType && { label: "Neck Type", value: data.neckType },
+        data.sleeveType && { label: "Sleeve", value: data.sleeveType },
+        data.pattern && { label: "Pattern", value: data.pattern },
+        data.care && { label: "Care", value: data.care },
+      ].filter(Boolean);
+
+      // 5. Build colors array with hex codes
+      const colorsWithHex = data.colors.map((colorName) => {
+        const colorObj = availableColors.find((c) => c.name === colorName);
+        return {
+          name: colorName,
+          code: colorObj?.code || "#000000",
+        };
+      });
+
+      // 6. Final product object
       const productData = {
-        ...data,
-        images: imageUrls,
-        discount,
+        name: data.name,
+        sku: data.sku.toUpperCase(),
+        category: data.category,
+        brand: data.brand,
         price: Number(data.price),
         originalPrice: Number(data.originalPrice || 0),
+        discount,
         stock: Number(data.stock),
+        description: data.description,
+        features: featuresArray,
+        sizes: data.sizes,
+        colors: colorsWithHex,
+        specifications,
+        images: imageUrls,
+        inStock: Number(data.stock) > 0,
+        status: "active",
+        rating: 0,
+        reviews: 0,
+        sales: 0,
+        email: user?.email || "",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      // 4. Save to MongoDB
-      await axiosSecure.post("/products", productData);
+      console.log("Submitting product:", productData);
 
-      setSubmitSuccess(true);
+      // 7. Save to MongoDB
+      const res = await axiosSecure.post("/products", productData);
 
-      setTimeout(() => {
-        navigate("/dashboard/manage-products");
-      }, 2000);
+      if (res.data.insertedId) {
+        setSubmitSuccess(true);
+        toast.success("Product added successfully! 🎉");
+
+        setTimeout(() => {
+          navigate("/dashboard/manage-products");
+        }, 2000);
+      }
     } catch (error) {
-      console.error(error);
-      setSubmitError("Failed to add product. Please try again.");
+      console.error("Submit error:", error);
+      setSubmitError(
+        error.response?.data?.message ||
+          "Failed to add product. Please try again.",
+      );
+      toast.error("Failed to add product");
     }
   };
 
@@ -203,7 +293,7 @@ const AddProduct = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
               Add New Product
@@ -214,6 +304,7 @@ const AddProduct = () => {
           </div>
 
           <button
+            type="button"
             onClick={() => setShowPreview(!showPreview)}
             className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
           >
@@ -258,33 +349,77 @@ const AddProduct = () => {
                 </h2>
 
                 <div className="space-y-5">
-                  {/* Product Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Product Name *
-                    </label>
-                    <input
-                      {...register("name", {
-                        required: "Product name is required",
-                        minLength: {
-                          value: 3,
-                          message: "Name must be at least 3 characters",
-                        },
-                      })}
-                      type="text"
-                      className={`block w-full px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        errors.name
-                          ? "border-red-300 dark:border-red-600"
-                          : "border-gray-300 dark:border-gray-600"
-                      }`}
-                      placeholder="e.g., Premium Cotton T-Shirt"
-                    />
-                    {errors.name && (
-                      <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                        <FiAlertCircle className="w-4 h-4" />
-                        {errors.name.message}
+                  {/* Product Name & SKU */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Product Name *
+                      </label>
+                      <input
+                        {...register("name", {
+                          required: "Product name is required",
+                          minLength: {
+                            value: 3,
+                            message: "Name must be at least 3 characters",
+                          },
+                        })}
+                        type="text"
+                        className={`block w-full px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                          errors.name
+                            ? "border-red-300 dark:border-red-600"
+                            : "border-gray-300 dark:border-gray-600"
+                        }`}
+                        placeholder="e.g., Premium Cotton T-Shirt"
+                      />
+                      {errors.name && (
+                        <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <FiAlertCircle className="w-4 h-4" />
+                          {errors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* SKU Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        SKU (Stock Keeping Unit) *
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          {...register("sku", {
+                            required: "SKU is required",
+                            pattern: {
+                              value: /^[A-Z0-9-]+$/,
+                              message:
+                                "SKU must contain only uppercase letters, numbers, and hyphens",
+                            },
+                          })}
+                          type="text"
+                          className={`flex-1 px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                            errors.sku
+                              ? "border-red-300 dark:border-red-600"
+                              : "border-gray-300 dark:border-gray-600"
+                          }`}
+                          placeholder="TSH-001-BLK"
+                          style={{ textTransform: "uppercase" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={generateSKU}
+                          className="px-4 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap"
+                        >
+                          Generate
+                        </button>
+                      </div>
+                      {errors.sku && (
+                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                          {errors.sku.message}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Example: TSH-PRE001, JKT-LEA002
                       </p>
-                    )}
+                    </div>
                   </div>
 
                   {/* Category & Brand */}
@@ -387,6 +522,9 @@ const AddProduct = () => {
                         className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                         placeholder="35.99"
                       />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        For showing discount
+                      </p>
                     </div>
 
                     <div>
@@ -455,8 +593,11 @@ const AddProduct = () => {
                       {...register("features")}
                       rows={4}
                       className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                      placeholder="100% Premium Cotton&#10;Machine Washable&#10;Comfortable Fit"
+                      placeholder="100% Premium Cotton&#10;Machine Washable&#10;Comfortable Fit&#10;Breathable Fabric"
                     />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Each line will be a separate feature
+                    </p>
                   </div>
                 </div>
               </div>
@@ -507,7 +648,7 @@ const AddProduct = () => {
                           <FiX className="w-4 h-4" />
                         </button>
                         {index === 0 && (
-                          <div className="absolute bottom-2 left-2 px-2 py-1 bg-blue-600 text-white text-xs rounded-lg">
+                          <div className="absolute bottom-2 left-2 px-2 py-1 bg-blue-600 text-white text-xs rounded-lg font-semibold">
                             Main Image
                           </div>
                         )}
@@ -538,6 +679,9 @@ const AddProduct = () => {
                     </button>
                   ))}
                 </div>
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  Selected: {watch("sizes")?.length || 0} sizes
+                </p>
               </div>
 
               {/* Colors */}
@@ -545,13 +689,13 @@ const AddProduct = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                   Available Colors *
                 </h2>
-                <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {availableColors.map((color) => (
                     <button
                       key={color.name}
                       type="button"
                       onClick={() => handleColorToggle(color.name)}
-                      className={`relative group`}
+                      className="relative group"
                     >
                       <div
                         className={`w-16 h-16 rounded-full border-4 transition ${
@@ -570,12 +714,15 @@ const AddProduct = () => {
                     </button>
                   ))}
                 </div>
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  Selected: {watch("colors")?.length || 0} colors
+                </p>
               </div>
 
               {/* Specifications */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  Specifications
+                  Specifications (Optional)
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -615,7 +762,7 @@ const AddProduct = () => {
                       {...register("neckType")}
                       type="text"
                       className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Crew Neck"
+                      placeholder="e.g., Crew Neck, V-Neck"
                     />
                   </div>
 
@@ -627,7 +774,7 @@ const AddProduct = () => {
                       {...register("sleeveType")}
                       type="text"
                       className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Short Sleeve"
+                      placeholder="e.g., Short Sleeve, Long Sleeve"
                     />
                   </div>
 
@@ -639,7 +786,7 @@ const AddProduct = () => {
                       {...register("pattern")}
                       type="text"
                       className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Solid"
+                      placeholder="e.g., Solid, Striped"
                     />
                   </div>
 
@@ -677,7 +824,8 @@ const AddProduct = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard/manage-products")}
-                  className="px-8 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  disabled={isSubmitting}
+                  className="px-8 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -696,13 +844,30 @@ const AddProduct = () => {
                 {/* Preview Card */}
                 <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                   {/* Image */}
-                  <div className="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                  <div className="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center relative">
                     {imagePreviews[0] ? (
-                      <img
-                        src={imagePreviews[0]}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <img
+                          src={imagePreviews[0]}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        {watchAllFields.originalPrice &&
+                          watchAllFields.price &&
+                          watchAllFields.originalPrice >
+                            watchAllFields.price && (
+                            <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-semibold">
+                              -
+                              {Math.round(
+                                ((watchAllFields.originalPrice -
+                                  watchAllFields.price) /
+                                  watchAllFields.originalPrice) *
+                                  100,
+                              )}
+                              %
+                            </div>
+                          )}
+                      </>
                     ) : (
                       <FiImage className="w-16 h-16 text-gray-400" />
                     )}
@@ -715,6 +880,12 @@ const AddProduct = () => {
                         {watchAllFields.category || "Category"}
                       </span>
                     </div>
+
+                    {watchAllFields.sku && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                        SKU: {watchAllFields.sku}
+                      </p>
+                    )}
 
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                       {watchAllFields.name || "Product Name"}
@@ -729,12 +900,19 @@ const AddProduct = () => {
                       <span className="text-2xl font-bold text-blue-600">
                         ${watchAllFields.price || "0.00"}
                       </span>
-                      {watchAllFields.originalPrice && (
-                        <span className="text-sm text-gray-400 line-through">
-                          ${watchAllFields.originalPrice}
-                        </span>
-                      )}
+                      {watchAllFields.originalPrice &&
+                        watchAllFields.originalPrice > watchAllFields.price && (
+                          <span className="text-sm text-gray-400 line-through">
+                            ${watchAllFields.originalPrice}
+                          </span>
+                        )}
                     </div>
+
+                    {watchAllFields.stock && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                        Stock: {watchAllFields.stock} units
+                      </p>
+                    )}
 
                     {/* Sizes */}
                     {watchAllFields.sizes?.length > 0 && (
@@ -763,7 +941,7 @@ const AddProduct = () => {
                         </p>
                         <div className="flex gap-2">
                           {watchAllFields.colors
-                            .slice(0, 4)
+                            .slice(0, 5)
                             .map((colorName) => {
                               const color = availableColors.find(
                                 (c) => c.name === colorName,
@@ -773,12 +951,13 @@ const AddProduct = () => {
                                   key={colorName}
                                   className="w-6 h-6 rounded-full border border-gray-300"
                                   style={{ backgroundColor: color?.code }}
+                                  title={colorName}
                                 />
                               );
                             })}
-                          {watchAllFields.colors.length > 4 && (
-                            <span className="text-xs text-gray-600 dark:text-gray-400">
-                              +{watchAllFields.colors.length - 4}
+                          {watchAllFields.colors.length > 5 && (
+                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                              +{watchAllFields.colors.length - 5}
                             </span>
                           )}
                         </div>

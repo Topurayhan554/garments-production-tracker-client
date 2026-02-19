@@ -57,7 +57,7 @@ const ApprovedOrders = () => {
     };
   }, []);
 
-  // ✅ Load approved orders from database
+  //Load approved orders from database
   useEffect(() => {
     const fetchApprovedOrders = async () => {
       setIsLoading(true);
@@ -133,7 +133,7 @@ const ApprovedOrders = () => {
     setShowStatusModal(true);
   };
 
-  // ✅ Update production status - API call
+  //Update production status
   const handleStatusUpdateConfirm = async () => {
     if (!newStatus || newStatus === orderToUpdate.status) {
       toast.warning("Please select a different status");

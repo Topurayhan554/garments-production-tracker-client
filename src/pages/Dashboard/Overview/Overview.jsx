@@ -40,6 +40,15 @@ const Overview = () => {
     }, 1000);
   }, [user.role]);
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Overview | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   // Get mock data based on role
   const getMockData = (role) => {
     if (role === "admin") {

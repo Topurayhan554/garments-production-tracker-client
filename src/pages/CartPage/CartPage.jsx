@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import {
   FiShoppingCart,
@@ -26,6 +26,14 @@ const CartPage = () => {
     totalPrice,
     clearCart,
   } = useCart();
+
+  useEffect(() => {
+    document.title = "Cart | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
 
   // Shipping fee calculation
   const shippingFee = totalPrice >= 500 ? 0 : 60;

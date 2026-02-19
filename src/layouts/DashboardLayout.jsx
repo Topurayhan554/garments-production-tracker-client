@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router";
 import {
   FiHome,
@@ -23,6 +23,14 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    document.title = "Dashboard | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
 
   // TODO: Get from your auth context
   // const { user, logout } = useAuth();

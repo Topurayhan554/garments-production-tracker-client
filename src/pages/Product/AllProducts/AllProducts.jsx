@@ -15,6 +15,7 @@ import { SkeletonTable } from "../../../components/Loading";
 import useAxiosSecure from "../../../hooks/useAxiosSecure"; // ✅ Import করো
 import { useCart } from "../../../context/CartContext"; // ✅ Cart hook
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet-async";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
@@ -27,6 +28,14 @@ const AllProducts = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
+
+  useEffect(() => {
+    document.title = "All Products | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
 
   const axiosSecure = useAxiosSecure();
 

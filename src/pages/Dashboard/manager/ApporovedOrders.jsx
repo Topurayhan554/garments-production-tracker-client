@@ -150,6 +150,15 @@ const ApprovedOrders = () => {
     { id: "shipped", name: "Shipped" },
   ];
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Approved Orders | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   // Load orders
   useEffect(() => {
     setIsLoading(true);

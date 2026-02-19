@@ -126,6 +126,15 @@ const PendingOrders = () => {
     },
   ];
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Pending Orders | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   useEffect(() => {
     setIsLoading(true);
     setTimeout(() => {

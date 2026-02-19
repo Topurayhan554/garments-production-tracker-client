@@ -129,6 +129,15 @@ const ManageUsers = () => {
     },
   ];
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Manage Users | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   useEffect(() => {
     setIsLoading(true);
     setTimeout(() => {

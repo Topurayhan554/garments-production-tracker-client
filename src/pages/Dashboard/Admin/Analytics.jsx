@@ -16,6 +16,15 @@ const Analytics = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("7days");
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Analytics | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   useEffect(() => {
     // Simulate loading
     setTimeout(() => setIsLoading(false), 1000);

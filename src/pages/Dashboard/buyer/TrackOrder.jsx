@@ -26,6 +26,15 @@ const TrackOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - Track Orders | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   // Mock order tracking data
   const mockOrderData = {
     "#1234": {

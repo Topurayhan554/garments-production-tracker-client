@@ -12,11 +12,12 @@ import {
   FiMapPin,
   FiCalendar,
   FiDollarSign,
-  FiPhone,
-  FiMail,
   FiShoppingBag,
 } from "react-icons/fi";
 import { SkeletonTable } from "../../../components/Loading";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,122 +27,48 @@ const MyOrders = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  // Mock orders data for buyer
-  const mockOrders = [
-    {
-      id: "#1238",
-      product: "Casual Polo Shirt",
-      productImage:
-        "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=100",
-      quantity: 2,
-      size: "M",
-      color: "White",
-      amount: 65.98,
-      status: "delivered",
-      orderDate: "2024-01-30",
-      deliveryDate: "2024-02-06",
-      estimatedDelivery: "2024-02-11",
-      address: "654 Pine Ave, Uttara, Dhaka-1230",
-      paymentMethod: "Rocket",
-      paymentStatus: "paid",
-      trackingNumber: "TRK-2024-004",
-      notes: "Leave at reception",
-    },
-    {
-      id: "#1237",
-      product: "Winter Hoodie",
-      productImage:
-        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=100",
-      quantity: 1,
-      size: "L",
-      color: "Black",
-      amount: 54.99,
-      status: "shipped",
-      orderDate: "2024-02-02",
-      deliveryDate: null,
-      estimatedDelivery: "2024-02-12",
-      address: "321 Elm St, Banani, Dhaka-1213",
-      paymentMethod: "Cash on Delivery",
-      paymentStatus: "pending",
-      trackingNumber: "TRK-2024-003",
-      notes: "Call before delivery",
-    },
-    {
-      id: "#1236",
-      product: "Sports Jersey",
-      productImage:
-        "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=100",
-      quantity: 3,
-      size: "XL",
-      color: "Red",
-      amount: 119.97,
-      status: "in-production",
-      orderDate: "2024-02-02",
-      deliveryDate: null,
-      estimatedDelivery: "2024-02-08",
-      address: "789 Oak Rd, Dhanmondi, Dhaka-1205",
-      paymentMethod: "Nagad",
-      paymentStatus: "paid",
-      trackingNumber: null,
-      notes: "",
-    },
-    {
-      id: "#1234",
-      product: "Premium Cotton T-Shirt",
-      productImage:
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100",
-      quantity: 2,
-      size: "L",
-      color: "Navy Blue",
-      amount: 51.98,
-      status: "pending",
-      orderDate: "2024-02-03",
-      deliveryDate: null,
-      estimatedDelivery: "2024-02-10",
-      address: "123 Main St, Mirpur, Dhaka-1216",
-      paymentMethod: "Cash on Delivery",
-      paymentStatus: "pending",
-      trackingNumber: null,
-      notes: "Please deliver between 2-5 PM",
-    },
-    {
-      id: "#1229",
-      product: "Formal Business Shirt",
-      productImage:
-        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=100",
-      quantity: 1,
-      size: "L",
-      color: "Sky Blue",
-      amount: 45.99,
-      status: "cancelled",
-      orderDate: "2024-01-29",
-      deliveryDate: null,
-      estimatedDelivery: null,
-      address: "987 Maple Dr, Motijheel, Dhaka-1000",
-      paymentMethod: "Cash on Delivery",
-      paymentStatus: "refunded",
-      trackingNumber: null,
-      notes: "Cancelled due to unavailability",
-    },
-  ];
+  const axiosSecure = useAxiosSecure();
+  const { user } = useAuth();
 
   const orderStatuses = [
     { id: "all", name: "All Orders" },
     { id: "pending", name: "Pending" },
+    { id: "confirmed", name: "Confirmed" },
     { id: "in-production", name: "In Production" },
     { id: "shipped", name: "Shipped" },
     { id: "delivered", name: "Delivered" },
     { id: "cancelled", name: "Cancelled" },
   ];
 
-  // Load orders
+  // title
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setOrders(mockOrders);
-      setIsLoading(false);
-    }, 1000);
+    document.title = "Dashboard - My Orders | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
   }, []);
+
+  //Load orders from database
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user?.email) return;
+
+      setIsLoading(true);
+      try {
+        // Fetch orders for current user
+        const res = await axiosSecure.get(`/orders?email=${user.email}`);
+        setOrders(res.data);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        toast.error("Failed to load orders");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user?.email, axiosSecure]);
 
   // Filter orders
   const getFilteredOrders = () => {
@@ -150,8 +77,13 @@ const MyOrders = () => {
     if (searchQuery) {
       filtered = filtered.filter(
         (order) =>
-          order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.product.toLowerCase().includes(searchQuery.toLowerCase()),
+          order.orderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.productName
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.trackingNumber
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -170,17 +102,20 @@ const MyOrders = () => {
     setShowDetailsModal(true);
   };
 
-  // Stats
+  // ✅ Calculate stats from real data
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === "pending").length,
+    confirmed: orders.filter((o) => o.status === "confirmed").length,
     inProduction: orders.filter((o) => o.status === "in-production").length,
-    shipped: orders.filter((o) => o.status === "shipped").length,
+    shipped: orders.filter((o) =>
+      ["shipped", "in-transit", "out-for-delivery"].includes(o.status),
+    ).length,
     delivered: orders.filter((o) => o.status === "delivered").length,
     cancelled: orders.filter((o) => o.status === "cancelled").length,
     totalSpent: orders
       .filter((o) => o.paymentStatus === "paid")
-      .reduce((sum, o) => sum + o.amount, 0),
+      .reduce((sum, o) => sum + (o.total || 0), 0),
   };
 
   // Get status color and icon
@@ -192,6 +127,12 @@ const MyOrders = () => {
             "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400",
           icon: <FiClock className="w-4 h-4" />,
         };
+      case "confirmed":
+        return {
+          color:
+            "bg-cyan-100 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400",
+          icon: <FiCheckCircle className="w-4 h-4" />,
+        };
       case "in-production":
         return {
           color:
@@ -199,6 +140,8 @@ const MyOrders = () => {
           icon: <FiPackage className="w-4 h-4" />,
         };
       case "shipped":
+      case "in-transit":
+      case "out-for-delivery":
         return {
           color:
             "bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400",
@@ -222,6 +165,14 @@ const MyOrders = () => {
           icon: <FiClock className="w-4 h-4" />,
         };
     }
+  };
+
+  // Format status label
+  const formatStatus = (status) => {
+    return status
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
@@ -359,7 +310,7 @@ const MyOrders = () => {
               <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search by order ID or product..."
+                placeholder="Search by order ID, product, or tracking..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -394,7 +345,9 @@ const MyOrders = () => {
               No orders found
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              You haven't placed any orders yet
+              {searchQuery || selectedStatus !== "all"
+                ? "Try adjusting your filters"
+                : "You haven't placed any orders yet"}
             </p>
             <Link
               to="/all-products"
@@ -410,7 +363,7 @@ const MyOrders = () => {
               const statusInfo = getStatusInfo(order.status);
               return (
                 <div
-                  key={order.id}
+                  key={order._id}
                   className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <div className="p-6">
@@ -418,33 +371,29 @@ const MyOrders = () => {
                       {/* Order Info */}
                       <div className="flex items-start gap-4 flex-1">
                         <img
-                          src={order.productImage}
-                          alt={order.product}
+                          src={order.productImage || "/placeholder.png"}
+                          alt={order.productName}
                           className="w-20 h-20 rounded-xl object-cover"
+                          onError={(e) => {
+                            e.target.src = "/placeholder.png";
+                          }}
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                              {order.product}
+                              {order.productName}
                             </h3>
                             <span
                               className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${statusInfo.color}`}
                             >
                               {statusInfo.icon}
-                              {order.status
-                                .split("-")
-                                .map(
-                                  (word) =>
-                                    word.charAt(0).toUpperCase() +
-                                    word.slice(1),
-                                )
-                                .join(" ")}
+                              {formatStatus(order.status)}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <div>
                               <span className="font-semibold">Order ID:</span>{" "}
-                              {order.id}
+                              {order.orderId}
                             </div>
                             <div>
                               <span className="font-semibold">Qty:</span>{" "}
@@ -462,7 +411,9 @@ const MyOrders = () => {
                           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                             <FiCalendar className="inline w-4 h-4 mr-1" />
                             Ordered:{" "}
-                            {new Date(order.orderDate).toLocaleDateString()}
+                            {new Date(
+                              order.orderDate || order.createdAt,
+                            ).toLocaleDateString()}
                             {order.estimatedDelivery && (
                               <span className="ml-4">
                                 <FiTruck className="inline w-4 h-4 mr-1" />
@@ -488,7 +439,7 @@ const MyOrders = () => {
                       <div className="flex items-center gap-4 lg:flex-col lg:items-end">
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                            ${order.amount.toFixed(2)}
+                            ${(order.total || order.amount || 0).toFixed(2)}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {order.paymentStatus === "paid" ? (
@@ -525,11 +476,17 @@ const MyOrders = () => {
                           className={`h-full transition-all duration-500 ${
                             order.status === "pending"
                               ? "w-1/4 bg-yellow-500"
-                              : order.status === "in-production"
-                                ? "w-1/2 bg-blue-500"
-                                : order.status === "shipped"
-                                  ? "w-3/4 bg-indigo-500"
-                                  : "w-full bg-green-500"
+                              : order.status === "confirmed"
+                                ? "w-1/3 bg-cyan-500"
+                                : order.status === "in-production"
+                                  ? "w-1/2 bg-blue-500"
+                                  : [
+                                        "shipped",
+                                        "in-transit",
+                                        "out-for-delivery",
+                                      ].includes(order.status)
+                                    ? "w-3/4 bg-indigo-500"
+                                    : "w-full bg-green-500"
                           }`}
                         ></div>
                       </div>
@@ -550,7 +507,13 @@ const MyOrders = () => {
                         </span>
                         <span
                           className={
-                            order.status === "shipped" ? "font-bold" : ""
+                            [
+                              "shipped",
+                              "in-transit",
+                              "out-for-delivery",
+                            ].includes(order.status)
+                              ? "font-bold"
+                              : ""
                           }
                         >
                           Shipped
@@ -571,7 +534,10 @@ const MyOrders = () => {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Showing {filteredOrders.length} of {orders.length} orders
             </p>
-            <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+            <button
+              onClick={() => toast.info("Receipt download coming soon!")}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2"
+            >
               <FiDownload className="w-4 h-4" />
               Download Receipt
             </button>
@@ -585,7 +551,7 @@ const MyOrders = () => {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Order Details {selectedOrderDetails.id}
+                Order Details {selectedOrderDetails.orderId}
               </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -604,13 +570,18 @@ const MyOrders = () => {
                 </h3>
                 <div className="flex items-start gap-4 mb-4">
                   <img
-                    src={selectedOrderDetails.productImage}
-                    alt={selectedOrderDetails.product}
+                    src={
+                      selectedOrderDetails.productImage || "/placeholder.png"
+                    }
+                    alt={selectedOrderDetails.productName}
                     className="w-24 h-24 rounded-xl object-cover"
+                    onError={(e) => {
+                      e.target.src = "/placeholder.png";
+                    }}
                   />
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2">
-                      {selectedOrderDetails.product}
+                      {selectedOrderDetails.productName}
                     </h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
@@ -640,7 +611,12 @@ const MyOrders = () => {
                           Total Amount
                         </p>
                         <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                          ${selectedOrderDetails.amount.toFixed(2)}
+                          $
+                          {(
+                            selectedOrderDetails.total ||
+                            selectedOrderDetails.amount ||
+                            0
+                          ).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -660,15 +636,11 @@ const MyOrders = () => {
                       Current Status
                     </p>
                     <span
-                      className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold mt-1 ${getStatusInfo(selectedOrderDetails.status).color}`}
+                      className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold mt-1 ${
+                        getStatusInfo(selectedOrderDetails.status).color
+                      }`}
                     >
-                      {selectedOrderDetails.status
-                        .split("-")
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() + word.slice(1),
-                        )
-                        .join(" ")}
+                      {formatStatus(selectedOrderDetails.status)}
                     </span>
                   </div>
                   {selectedOrderDetails.trackingNumber && (
@@ -687,7 +659,8 @@ const MyOrders = () => {
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white mt-1">
                       {new Date(
-                        selectedOrderDetails.orderDate,
+                        selectedOrderDetails.orderDate ||
+                          selectedOrderDetails.createdAt,
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -713,7 +686,11 @@ const MyOrders = () => {
                   Delivery Address
                 </h3>
                 <p className="text-gray-900 dark:text-white">
-                  {selectedOrderDetails.address}
+                  {selectedOrderDetails.deliveryAddress?.street},{" "}
+                  {selectedOrderDetails.deliveryAddress?.area},{" "}
+                  {selectedOrderDetails.deliveryAddress?.city}
+                  {selectedOrderDetails.deliveryAddress?.zip &&
+                    ` - ${selectedOrderDetails.deliveryAddress.zip}`}
                 </p>
                 {selectedOrderDetails.notes && (
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
@@ -756,9 +733,9 @@ const MyOrders = () => {
                       }`}
                     >
                       {selectedOrderDetails.paymentStatus
-                        .charAt(0)
+                        ?.charAt(0)
                         .toUpperCase() +
-                        selectedOrderDetails.paymentStatus.slice(1)}
+                        selectedOrderDetails.paymentStatus?.slice(1)}
                     </p>
                   </div>
                 </div>
@@ -768,7 +745,8 @@ const MyOrders = () => {
             <div className="mt-6 flex gap-3">
               {selectedOrderDetails.trackingNumber && (
                 <Link
-                  to={"/dashboard/track-order"}
+                  to={`/dashboard/track-order/${selectedOrderDetails.trackingNumber}`}
+                  onClick={() => setShowDetailsModal(false)}
                   className="flex-1 px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 rounded-xl font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center justify-center gap-2"
                 >
                   <FiTruck className="w-5 h-5" />

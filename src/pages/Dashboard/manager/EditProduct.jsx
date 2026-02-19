@@ -13,6 +13,14 @@ const EditProduct = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
+  useEffect(() => {
+    document.title = "Dashboard - Edit Product | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
@@ -147,7 +155,7 @@ const EditProduct = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload new images to imgbb if any
+      // Upload new images to imgbb
       let uploadedImageUrls = [];
       if (imageFiles.length > 0) {
         const uploadPromises = imageFiles.map(async (file) => {
@@ -213,6 +221,7 @@ const EditProduct = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <title>Edit Product</title>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

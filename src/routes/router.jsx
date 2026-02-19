@@ -19,10 +19,10 @@ import Analytics from "../pages/Dashboard/Admin/Analytics";
 import PendingOrders from "../pages/Dashboard/manager/PendingOrders";
 import ApprovedOrders from "../pages/Dashboard/manager/ApporovedOrders";
 import EditProduct from "../pages/Dashboard/manager/EditProduct";
-import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
 import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
 import CartPage from "../pages/CartPage/CartPage";
+import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 
 export const router = createBrowserRouter([
   {

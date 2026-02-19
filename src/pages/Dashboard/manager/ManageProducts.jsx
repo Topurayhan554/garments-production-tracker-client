@@ -29,6 +29,14 @@ const ManageProducts = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  useEffect(() => {
+    document.title = "Dashboard - Manage Product | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 

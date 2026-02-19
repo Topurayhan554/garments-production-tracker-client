@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useForm } from "react-hook-form";
 import {
@@ -16,6 +16,10 @@ import {
   FiArrowLeft,
 } from "react-icons/fi";
 import ButtonLoader from "../../../components/ButtonLoader";
+
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 const PAYMENT_METHODS = [
   {
@@ -35,9 +39,20 @@ const PAYMENT_METHODS = [
   },
 ];
 
+// title
+useEffect(() => {
+  document.title = "Dashboard - Place Orders | GarmentTrack";
+
+  return () => {
+    document.title = "GarmentTrack";
+  };
+}, []);
+
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const axiosSecure = useAxiosSecure();
+  const { user } = useAuth();
 
   // Product data — passed via router state OR default demo product
   const product = location.state?.product || {
@@ -71,7 +86,7 @@ const PlaceOrder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
-  const [step, setStep] = useState(1); // 1=details, 2=review
+  const [step, setStep] = useState(1);
 
   const {
     register,
@@ -116,44 +131,80 @@ const PlaceOrder = () => {
 
     setIsSubmitting(true);
 
-    const orderPayload = {
-      product: product.id,
-      productName: product.name,
-      quantity,
-      size: selectedSize,
-      color: selectedColor.name,
-      amount: total,
-      subtotal,
-      shippingFee,
-      discount: discountAmount,
-      paymentMethod,
-      couponCode: couponCode || null,
-      customer: {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-      },
-      deliveryAddress: {
-        street: formData.street,
-        area: formData.area,
-        city: formData.city,
-        zip: formData.zip,
-      },
-      notes: formData.notes || "",
-    };
+    try {
+      const orderPayload = {
+        // Product info
+        productId: product.id,
+        productName: product.name,
+        productImage: product.image,
+        quantity,
+        size: selectedSize,
+        color: selectedColor.name,
+        colorHex: selectedColor.hex,
+        category: product.category,
 
-    // TODO: Replace with actual API call
-    // const res = await axiosSecure.post('/orders', orderPayload);
+        // Pricing
+        price: product.price,
+        subtotal,
+        shippingFee,
+        discount: discountAmount,
+        total,
+        couponCode: couponCode || null,
 
-    await new Promise((r) => setTimeout(r, 2000)); // simulate API
+        // Customer info
+        customer: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+        },
 
-    const generatedId = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    setOrderId(generatedId);
-    setOrderSuccess(true);
-    setIsSubmitting(false);
+        // Delivery address
+        deliveryAddress: {
+          street: formData.street,
+          area: formData.area,
+          city: formData.city,
+          zip: formData.zip || "",
+        },
+
+        // Additional
+        notes: formData.notes || "",
+        paymentMethod,
+        paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
+
+        // Order status
+        status: "pending",
+
+        // User info (if logged in)
+        userId: user?._id || null,
+        userEmail: user?.email || formData.email,
+
+        // Timestamps
+        orderDate: new Date(),
+        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      };
+
+      // API call to save order
+      const res = await axiosSecure.post("/orders", orderPayload);
+
+      if (res.data.insertedId) {
+        const generatedId =
+          res.data.orderId || `#${res.data.insertedId.slice(-4).toUpperCase()}`;
+        setOrderId(generatedId);
+        setOrderSuccess(true);
+        toast.success("Order placed successfully! 🎉");
+      }
+    } catch (error) {
+      console.error("Order submission error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to place order. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // ─── Order Success Screen ──────────────────────────
+  // ─── Order Success Screen
   if (orderSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
@@ -212,7 +263,7 @@ const PlaceOrder = () => {
     );
   }
 
-  // ─── Main Page ────────────────────────────────────
+  // ─── Main Page
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

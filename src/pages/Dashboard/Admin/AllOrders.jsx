@@ -32,6 +32,15 @@ const AllOrders = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
 
+  // title
+  useEffect(() => {
+    document.title = "Dashboard - All Orders | GarmentTrack";
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, []);
+
   // Mock orders data - Replace with actual API call
   const mockOrders = [
     {

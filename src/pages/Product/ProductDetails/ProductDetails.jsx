@@ -36,7 +36,20 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("description");
   const { addToCart } = useCart();
 
-  // ✅ Load product from database
+  // Suppose 'product' is fetched from API
+  useEffect(() => {
+    if (product) {
+      document.title = `Dashboard - ${product.name} | GarmentTrack`;
+    } else {
+      document.title = "Dashboard - Product Details | GarmentTrack";
+    }
+
+    return () => {
+      document.title = "GarmentTrack";
+    };
+  }, [product]);
+
+  //Load product from database
   useEffect(() => {
     const fetchProduct = async () => {
       setIsLoading(true);
@@ -75,6 +88,7 @@ const ProductDetails = () => {
     }
   }, [product]);
 
+  // Set Dynamic Page Title
   const handleQuantityChange = (type) => {
     if (type === "increase" && quantity < (product?.stock || 0)) {
       setQuantity(quantity + 1);

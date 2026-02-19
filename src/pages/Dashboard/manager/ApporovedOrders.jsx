@@ -15,9 +15,10 @@ import {
   FiMail,
   FiClock,
 } from "react-icons/fi";
-
 import { SkeletonTable } from "../../../components/Loading";
 import ButtonLoader from "../../../components/ButtonLoader";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { toast } from "react-toastify";
 
 const ApprovedOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -32,159 +33,68 @@ const ApprovedOrders = () => {
   const [newStatus, setNewStatus] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Mock approved orders data
-  const mockOrders = [
-    {
-      id: "#1233",
-      customer: "Mike Chen",
-      customerEmail: "mike@example.com",
-      phone: "+880 1234-567891",
-      product: "Classic Denim Jacket",
-      quantity: 1,
-      size: "M",
-      color: "Blue",
-      amount: 89.99,
-      status: "approved",
-      productionStatus: "pending",
-      approvedDate: "2024-02-03",
-      estimatedDelivery: "2024-02-15",
-      address: "456 Park Ave, Gulshan, Dhaka-1212",
-      paymentMethod: "bKash",
-      paymentStatus: "paid",
-      notes: "Gift wrap requested",
-      avatar: "https://i.pravatar.cc/100?img=13",
-      trackingNumber: null,
-    },
-    {
-      id: "#1227",
-      customer: "Robert Taylor",
-      customerEmail: "robert@example.com",
-      phone: "+880 1234-567897",
-      product: "Leather Jacket",
-      quantity: 1,
-      size: "L",
-      color: "Brown",
-      amount: 199.99,
-      status: "approved",
-      productionStatus: "in-progress",
-      approvedDate: "2024-02-02",
-      estimatedDelivery: "2024-02-14",
-      address: "258 Birch Ct, Dhanmondi, Dhaka-1205",
-      paymentMethod: "Credit Card",
-      paymentStatus: "paid",
-      notes: "",
-      avatar: "https://i.pravatar.cc/100?img=15",
-      trackingNumber: "TRK-2024-001",
-    },
-    {
-      id: "#1226",
-      customer: "Anna Martinez",
-      customerEmail: "anna@example.com",
-      phone: "+880 1234-567896",
-      product: "Designer T-Shirt",
-      quantity: 4,
-      size: "L",
-      color: "Black",
-      amount: 115.96,
-      status: "approved",
-      productionStatus: "completed",
-      approvedDate: "2024-02-01",
-      estimatedDelivery: "2024-02-13",
-      address: "147 Cedar Ln, Banani, Dhaka-1213",
-      paymentMethod: "Nagad",
-      paymentStatus: "paid",
-      notes: "",
-      avatar: "https://i.pravatar.cc/100?img=20",
-      trackingNumber: "TRK-2024-002",
-    },
-    {
-      id: "#1225",
-      customer: "David Lee",
-      customerEmail: "david@example.com",
-      phone: "+880 1234-567893",
-      product: "Winter Hoodie",
-      quantity: 1,
-      size: "L",
-      color: "Black",
-      amount: 54.99,
-      status: "approved",
-      productionStatus: "ready-to-ship",
-      approvedDate: "2024-01-31",
-      estimatedDelivery: "2024-02-12",
-      address: "321 Elm St, Banani, Dhaka-1213",
-      paymentMethod: "Cash on Delivery",
-      paymentStatus: "pending",
-      notes: "Call before delivery",
-      avatar: "https://i.pravatar.cc/100?img=8",
-      trackingNumber: "TRK-2024-003",
-    },
-    {
-      id: "#1224",
-      customer: "Lisa Park",
-      customerEmail: "lisa@example.com",
-      phone: "+880 1234-567894",
-      product: "Casual Polo Shirt",
-      quantity: 2,
-      size: "M",
-      color: "White",
-      amount: 65.98,
-      status: "approved",
-      productionStatus: "shipped",
-      approvedDate: "2024-01-30",
-      estimatedDelivery: "2024-02-11",
-      address: "654 Pine Ave, Uttara, Dhaka-1230",
-      paymentMethod: "Rocket",
-      paymentStatus: "paid",
-      notes: "Leave at reception",
-      avatar: "https://i.pravatar.cc/100?img=9",
-      trackingNumber: "TRK-2024-004",
-    },
-  ];
+  const axiosSecure = useAxiosSecure();
 
   const productionStatuses = [
-    { id: "all", name: "All Status" },
-    { id: "pending", name: "Pending Production" },
-    { id: "in-progress", name: "In Progress" },
-    { id: "completed", name: "Production Complete" },
-    { id: "ready-to-ship", name: "Ready to Ship" },
-    { id: "shipped", name: "Shipped" },
+    { id: "all", name: "All Status", value: "all" },
+    { id: "confirmed", name: "Confirmed", value: "confirmed" },
+    { id: "in-production", name: "In Production", value: "in-production" },
+    { id: "quality-check", name: "Quality Check", value: "quality-check" },
+    { id: "packed", name: "Packed", value: "packed" },
+    { id: "in-transit", name: "In Transit", value: "in-transit" },
+    {
+      id: "out-for-delivery",
+      name: "Out for Delivery",
+      value: "out-for-delivery",
+    },
   ];
 
-  // title
+  // Page title
   useEffect(() => {
     document.title = "Dashboard - Approved Orders | GarmentTrack";
-
     return () => {
       document.title = "GarmentTrack";
     };
   }, []);
 
-  // Load orders
+  // ✅ Load approved orders from database
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setOrders(mockOrders);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    const fetchApprovedOrders = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch all confirmed/approved orders (not pending or cancelled)
+        const res = await axiosSecure.get("/orders/approved");
+        setOrders(res.data);
+      } catch (error) {
+        console.error("Error fetching approved orders:", error);
+        toast.error("Failed to load approved orders");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApprovedOrders();
+  }, [axiosSecure]);
 
   // Filter orders
   const getFilteredOrders = () => {
     let filtered = [...orders];
 
+    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (order) =>
-          order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.product.toLowerCase().includes(searchQuery.toLowerCase()),
+          order.orderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.customer?.name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          order.productName?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
+    // Status filter
     if (selectedStatus !== "all") {
-      filtered = filtered.filter(
-        (order) => order.productionStatus === selectedStatus,
-      );
+      filtered = filtered.filter((order) => order.status === selectedStatus);
     }
 
     return filtered;
@@ -192,16 +102,16 @@ const ApprovedOrders = () => {
 
   const filteredOrders = getFilteredOrders();
 
-  // Handle select all
+  // Select all/none
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedOrders(filteredOrders.map((o) => o.id));
+      setSelectedOrders(filteredOrders.map((o) => o._id));
     } else {
       setSelectedOrders([]);
     }
   };
 
-  // Handle select order
+  // Toggle single selection
   const handleSelectOrder = (orderId) => {
     if (selectedOrders.includes(orderId)) {
       setSelectedOrders(selectedOrders.filter((id) => id !== orderId));
@@ -210,63 +120,99 @@ const ApprovedOrders = () => {
     }
   };
 
-  // Handle view details
+  // View order details
   const handleViewDetails = (order) => {
     setSelectedOrderDetails(order);
     setShowDetailsModal(true);
   };
 
-  // Handle status update
+  // Open status update modal
   const handleStatusUpdateClick = (order) => {
     setOrderToUpdate(order);
-    setNewStatus(order.productionStatus);
+    setNewStatus(order.status);
     setShowStatusModal(true);
   };
 
+  // ✅ Update production status - API call
   const handleStatusUpdateConfirm = async () => {
+    if (!newStatus || newStatus === orderToUpdate.status) {
+      toast.warning("Please select a different status");
+      return;
+    }
+
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    setOrders(
-      orders.map((o) =>
-        o.id === orderToUpdate.id ? { ...o, productionStatus: newStatus } : o,
-      ),
-    );
+    try {
+      const res = await axiosSecure.patch(
+        `/orders/${orderToUpdate._id}/status`,
+        {
+          status: newStatus,
+        },
+      );
 
-    setShowStatusModal(false);
-    setOrderToUpdate(null);
-    setIsProcessing(false);
+      if (res.data.success) {
+        // Update local state
+        setOrders((prev) =>
+          prev.map((o) =>
+            o._id === orderToUpdate._id ? { ...o, status: newStatus } : o,
+          ),
+        );
+
+        toast.success(`Order ${orderToUpdate.orderId} status updated! 🚀`);
+        setShowStatusModal(false);
+        setOrderToUpdate(null);
+
+        // Close details modal if open
+        if (selectedOrderDetails?._id === orderToUpdate._id) {
+          setShowDetailsModal(false);
+        }
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+      toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  // Stats
+  // Calculate stats
   const stats = {
     total: orders.length,
-    pending: orders.filter((o) => o.productionStatus === "pending").length,
-    inProgress: orders.filter((o) => o.productionStatus === "in-progress")
-      .length,
-    completed: orders.filter((o) => o.productionStatus === "completed").length,
-    readyToShip: orders.filter((o) => o.productionStatus === "ready-to-ship")
-      .length,
-    shipped: orders.filter((o) => o.productionStatus === "shipped").length,
-    totalValue: orders.reduce((sum, o) => sum + o.amount, 0),
+    confirmed: orders.filter((o) => o.status === "confirmed").length,
+    inProduction: orders.filter((o) => o.status === "in-production").length,
+    qualityCheck: orders.filter((o) => o.status === "quality-check").length,
+    packed: orders.filter((o) => o.status === "packed").length,
+    inTransit: orders.filter((o) =>
+      ["in-transit", "out-for-delivery"].includes(o.status),
+    ).length,
+    totalValue: orders.reduce((sum, o) => sum + (o.total || 0), 0),
   };
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case "pending":
-        return "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400";
-      case "in-progress":
+      case "confirmed":
+        return "bg-cyan-100 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400";
+      case "in-production":
         return "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400";
-      case "completed":
+      case "quality-check":
         return "bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400";
-      case "ready-to-ship":
+      case "packed":
         return "bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400";
-      case "shipped":
+      case "in-transit":
+      case "out-for-delivery":
         return "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400";
       default:
         return "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400";
     }
+  };
+
+  // Format status label
+  const formatStatus = (status) => {
+    return status
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
@@ -302,15 +248,15 @@ const ApprovedOrders = () => {
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/20 rounded-xl flex items-center justify-center">
-                <FiClock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/20 rounded-xl flex items-center justify-center">
+                <FiCheckCircle className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.pending}
+                  {stats.confirmed}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Pending
+                  Confirmed
                 </p>
               </div>
             </div>
@@ -323,7 +269,7 @@ const ApprovedOrders = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.inProgress}
+                  {stats.inProduction}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   In Progress
@@ -339,11 +285,9 @@ const ApprovedOrders = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.completed}
+                  {stats.qualityCheck}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Completed
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">QC</p>
               </div>
             </div>
           </div>
@@ -355,10 +299,10 @@ const ApprovedOrders = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.readyToShip}
+                  {stats.packed}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Ready
+                  Packed
                 </p>
               </div>
             </div>
@@ -371,10 +315,10 @@ const ApprovedOrders = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.shipped}
+                  {stats.inTransit}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Shipped
+                  Shipping
                 </p>
               </div>
             </div>
@@ -401,7 +345,7 @@ const ApprovedOrders = () => {
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {productionStatuses.map((status) => (
-                <option key={status.id} value={status.id}>
+                <option key={status.id} value={status.value}>
                   {status.name}
                 </option>
               ))}
@@ -424,7 +368,9 @@ const ApprovedOrders = () => {
                 No approved orders found
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Try adjusting your search or filter
+                {searchQuery || selectedStatus !== "all"
+                  ? "Try adjusting your search or filter"
+                  : "No orders have been approved yet"}
               </p>
             </div>
           ) : (
@@ -436,7 +382,8 @@ const ApprovedOrders = () => {
                       <input
                         type="checkbox"
                         checked={
-                          selectedOrders.length === filteredOrders.length
+                          selectedOrders.length === filteredOrders.length &&
+                          filteredOrders.length > 0
                         }
                         onChange={handleSelectAll}
                         className="w-4 h-4 text-blue-600 rounded cursor-pointer"
@@ -468,43 +415,36 @@ const ApprovedOrders = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredOrders.map((order) => (
                     <tr
-                      key={order.id}
+                      key={order._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
-                          checked={selectedOrders.includes(order.id)}
-                          onChange={() => handleSelectOrder(order.id)}
+                          checked={selectedOrders.includes(order._id)}
+                          onChange={() => handleSelectOrder(order._id)}
                           className="w-4 h-4 text-blue-600 rounded cursor-pointer"
                         />
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-blue-600 dark:text-blue-400">
-                          {order.id}
+                          {order.orderId}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={order.avatar}
-                            alt={order.customer}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {order.customer}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {order.customerEmail}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {order.customer?.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {order.customer?.email}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">
-                            {order.product}
+                            {order.productName}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Qty: {order.quantity} • {order.size}
@@ -513,25 +453,23 @@ const ApprovedOrders = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          ${order.amount.toFixed(2)}
+                          ${(order.total || 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleStatusUpdateClick(order)}
-                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition hover:scale-105 ${getStatusColor(order.productionStatus)}`}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition hover:scale-105 ${getStatusColor(order.status)}`}
                         >
-                          {order.productionStatus
-                            .split("-")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1),
-                            )
-                            .join(" ")}
+                          {formatStatus(order.status)}
                         </button>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(order.estimatedDelivery).toLocaleDateString()}
+                        {order.estimatedDelivery
+                          ? new Date(
+                              order.estimatedDelivery,
+                            ).toLocaleDateString()
+                          : "TBD"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -558,6 +496,7 @@ const ApprovedOrders = () => {
             </div>
           )}
 
+          {/* Footer */}
           {filteredOrders.length > 0 && (
             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -565,7 +504,10 @@ const ApprovedOrders = () => {
                 orders
               </p>
 
-              <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+              <button
+                onClick={() => toast.info("Export feature coming soon!")}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2"
+              >
                 <FiDownload className="w-4 h-4" />
                 Export
               </button>
@@ -580,7 +522,7 @@ const ApprovedOrders = () => {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Order Details {selectedOrderDetails.id}
+                Order Details {selectedOrderDetails.orderId}
               </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -603,7 +545,7 @@ const ApprovedOrders = () => {
                       Name
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.customer}
+                      {selectedOrderDetails.customer?.name}
                     </p>
                   </div>
                   <div>
@@ -611,7 +553,7 @@ const ApprovedOrders = () => {
                       Email
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.customerEmail}
+                      {selectedOrderDetails.customer?.email}
                     </p>
                   </div>
                   <div>
@@ -619,7 +561,7 @@ const ApprovedOrders = () => {
                       Phone
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.phone}
+                      {selectedOrderDetails.customer?.phone}
                     </p>
                   </div>
                   <div>
@@ -645,7 +587,7 @@ const ApprovedOrders = () => {
                       Product
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.product}
+                      {selectedOrderDetails.productName}
                     </p>
                   </div>
                   <div>
@@ -677,7 +619,7 @@ const ApprovedOrders = () => {
                       Total Amount
                     </p>
                     <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                      ${selectedOrderDetails.amount.toFixed(2)}
+                      ${(selectedOrderDetails.total || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
@@ -685,15 +627,9 @@ const ApprovedOrders = () => {
                       Production Status
                     </p>
                     <span
-                      className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${getStatusColor(selectedOrderDetails.productionStatus)}`}
+                      className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${getStatusColor(selectedOrderDetails.status)}`}
                     >
-                      {selectedOrderDetails.productionStatus
-                        .split("-")
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() + word.slice(1),
-                        )
-                        .join(" ")}
+                      {formatStatus(selectedOrderDetails.status)}
                     </span>
                   </div>
                 </div>
@@ -711,7 +647,11 @@ const ApprovedOrders = () => {
                       Address
                     </p>
                     <p className="text-gray-900 dark:text-white">
-                      {selectedOrderDetails.address}
+                      {selectedOrderDetails.deliveryAddress?.street},{" "}
+                      {selectedOrderDetails.deliveryAddress?.area},{" "}
+                      {selectedOrderDetails.deliveryAddress?.city}
+                      {selectedOrderDetails.deliveryAddress?.zip &&
+                        ` - ${selectedOrderDetails.deliveryAddress.zip}`}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -720,9 +660,11 @@ const ApprovedOrders = () => {
                         Approved Date
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        {new Date(
-                          selectedOrderDetails.approvedDate,
-                        ).toLocaleDateString()}
+                        {selectedOrderDetails.confirmedAt
+                          ? new Date(
+                              selectedOrderDetails.confirmedAt,
+                            ).toLocaleDateString()
+                          : "N/A"}
                       </p>
                     </div>
                     <div>
@@ -730,9 +672,11 @@ const ApprovedOrders = () => {
                         Est. Delivery
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        {new Date(
-                          selectedOrderDetails.estimatedDelivery,
-                        ).toLocaleDateString()}
+                        {selectedOrderDetails.estimatedDelivery
+                          ? new Date(
+                              selectedOrderDetails.estimatedDelivery,
+                            ).toLocaleDateString()
+                          : "TBD"}
                       </p>
                     </div>
                   </div>
@@ -760,6 +704,7 @@ const ApprovedOrders = () => {
               </div>
             </div>
 
+            {/* Action Button */}
             <div className="mt-6">
               <button
                 onClick={() => {
@@ -777,7 +722,7 @@ const ApprovedOrders = () => {
       )}
 
       {/* Status Update Modal */}
-      {showStatusModal && (
+      {showStatusModal && orderToUpdate && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -789,11 +734,11 @@ const ApprovedOrders = () => {
             </h2>
 
             <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-              Update status for order "{orderToUpdate?.id}"
+              Update status for order "{orderToUpdate.orderId}"
             </p>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Select Production Status
               </label>
               <select
@@ -804,7 +749,7 @@ const ApprovedOrders = () => {
                 {productionStatuses
                   .filter((s) => s.id !== "all")
                   .map((status) => (
-                    <option key={status.id} value={status.id}>
+                    <option key={status.id} value={status.value}>
                       {status.name}
                     </option>
                   ))}
@@ -813,7 +758,10 @@ const ApprovedOrders = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowStatusModal(false)}
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setOrderToUpdate(null);
+                }}
                 disabled={isProcessing}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
               >
@@ -822,7 +770,7 @@ const ApprovedOrders = () => {
               <button
                 onClick={handleStatusUpdateConfirm}
                 disabled={isProcessing}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isProcessing ? (
                   <ButtonLoader text="Updating..." />

@@ -480,7 +480,7 @@ const Home = () => {
       </section>
 
       {/* Additional CSS for animations */}
-      <style jsx>{`
+      {/* <style jsx>{`
         @keyframes blob {
           0%,
           100% {
@@ -502,7 +502,7 @@ const Home = () => {
         .animation-delay-4000 {
           animation-delay: 4s;
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 };

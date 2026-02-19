@@ -13,11 +13,13 @@ import {
   FiCalendar,
   FiDollarSign,
   FiShoppingBag,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { SkeletonTable } from "../../../components/Loading";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
+import ButtonLoader from "../../../components/ButtonLoader";
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,6 +28,12 @@ const MyOrders = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+
+  // Cancel order states
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
@@ -40,23 +48,31 @@ const MyOrders = () => {
     { id: "cancelled", name: "Cancelled" },
   ];
 
-  // title
+  // Cancel reasons
+  const cancelReasons = [
+    "Changed my mind",
+    "Found a better price elsewhere",
+    "Ordered by mistake",
+    "Need to change size/color",
+    "Delivery taking too long",
+    "Other reasons",
+  ];
+
+  // Page title
   useEffect(() => {
     document.title = "Dashboard - My Orders | GarmentTrack";
-
     return () => {
       document.title = "GarmentTrack";
     };
   }, []);
 
-  //Load orders from database
+  // Load orders from database
   useEffect(() => {
     const fetchOrders = async () => {
       if (!user?.email) return;
 
       setIsLoading(true);
       try {
-        // Fetch orders for current user
         const res = await axiosSecure.get(`/orders?email=${user.email}`);
         setOrders(res.data);
       } catch (error) {
@@ -102,7 +118,70 @@ const MyOrders = () => {
     setShowDetailsModal(true);
   };
 
-  // ✅ Calculate stats from real data
+  // Handle cancel order - Open modal
+  const handleCancelOrder = (order) => {
+    setOrderToCancel(order);
+    setCancelReason("");
+    setShowCancelModal(true);
+  };
+
+  // Confirm cancel order - API call
+  const confirmCancelOrder = async () => {
+    if (!cancelReason) {
+      toast.warning("Please select a cancellation reason");
+      return;
+    }
+
+    if (!orderToCancel) return;
+
+    setIsCancelling(true);
+
+    try {
+      // Update order status to cancelled
+      const res = await axiosSecure.patch(
+        `/orders/${orderToCancel._id}/status`,
+        {
+          status: "cancelled",
+          cancelReason: cancelReason,
+          cancelledAt: new Date(),
+          cancelledBy: user?.email,
+        },
+      );
+
+      if (res.data.success) {
+        // Update local state
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order._id === orderToCancel._id
+              ? { ...order, status: "cancelled", cancelReason: cancelReason }
+              : order,
+          ),
+        );
+
+        toast.success("Order cancelled successfully! 🚫");
+        setShowCancelModal(false);
+        setOrderToCancel(null);
+        setCancelReason("");
+
+        // Close details modal if open
+        if (selectedOrderDetails?._id === orderToCancel._id) {
+          setShowDetailsModal(false);
+        }
+      }
+    } catch (error) {
+      console.error("Cancel order error:", error);
+      toast.error(error.response?.data?.message || "Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Check if order can be cancelled
+  const canCancelOrder = (status) => {
+    return ["pending", "confirmed"].includes(status);
+  };
+
+  // Calculate stats
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === "pending").length,
@@ -118,7 +197,7 @@ const MyOrders = () => {
       .reduce((sum, o) => sum + (o.total || 0), 0),
   };
 
-  // Get status color and icon
+  // Get status info
   const getStatusInfo = (status) => {
     switch (status) {
       case "pending":
@@ -167,7 +246,7 @@ const MyOrders = () => {
     }
   };
 
-  // Format status label
+  // Format status
   const formatStatus = (status) => {
     return status
       .split("-")
@@ -190,6 +269,7 @@ const MyOrders = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
+          {/* Stats cards remain same */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
@@ -331,7 +411,7 @@ const MyOrders = () => {
           </div>
         </div>
 
-        {/* Orders Grid/List */}
+        {/* Orders List */}
         {isLoading ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
             <SkeletonTable rows={5} />
@@ -436,7 +516,7 @@ const MyOrders = () => {
                       </div>
 
                       {/* Price & Actions */}
-                      <div className="flex items-center gap-4 lg:flex-col lg:items-end">
+                      <div className="flex items-center gap-3 lg:flex-col lg:items-end">
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gray-900 dark:text-white">
                             ${(order.total || order.amount || 0).toFixed(2)}
@@ -457,18 +537,33 @@ const MyOrders = () => {
                             )}
                           </p>
                         </div>
-                        <button
-                          onClick={() => handleViewDetails(order)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition flex items-center gap-2"
-                        >
-                          <FiEye className="w-4 h-4" />
-                          View Details
-                        </button>
+
+                        {/* Action buttons */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleViewDetails(order)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition flex items-center gap-2"
+                          >
+                            <FiEye className="w-4 h-4" />
+                            Details
+                          </button>
+
+                          {/* ✅ Cancel button - Only show for pending/confirmed */}
+                          {canCancelOrder(order.status) && (
+                            <button
+                              onClick={() => handleCancelOrder(order)}
+                              className="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2"
+                            >
+                              <FiXCircle className="w-4 h-4" />
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Progress Bar for Active Orders */}
+                  {/* Progress Bar */}
                   {!["delivered", "cancelled"].includes(order.status) && (
                     <div className="px-6 pb-6">
                       <div className="bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
@@ -545,7 +640,119 @@ const MyOrders = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
+      {/* ✅ Cancel Order Confirmation Modal */}
+      {showCancelModal && orderToCancel && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                <FiAlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Cancel Order
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Order ID: {orderToCancel.orderId}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Are you sure you want to cancel this order? This action cannot
+                be undone.
+              </p>
+
+              {/* Product Info */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={orderToCancel.productImage || "/placeholder.png"}
+                    alt={orderToCancel.productName}
+                    className="w-16 h-16 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.target.src = "/placeholder.png";
+                    }}
+                  />
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {orderToCancel.productName}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      $
+                      {(
+                        orderToCancel.total ||
+                        orderToCancel.amount ||
+                        0
+                      ).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cancellation Reason */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Reason for cancellation *
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="">Select a reason</option>
+                  {cancelReasons.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {reason}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Refund notice */}
+              {orderToCancel.paymentStatus === "paid" && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    💰 Your refund will be processed within 5-7 business days
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setOrderToCancel(null);
+                  setCancelReason("");
+                }}
+                disabled={isCancelling}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={confirmCancelOrder}
+                disabled={isCancelling || !cancelReason}
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isCancelling ? (
+                  <ButtonLoader text="Cancelling..." />
+                ) : (
+                  <>
+                    <FiXCircle className="w-5 h-5" />
+                    Cancel Order
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal (existing code) */}
       {showDetailsModal && selectedOrderDetails && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -677,6 +884,19 @@ const MyOrders = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Cancel reason if cancelled */}
+                {selectedOrderDetails.status === "cancelled" &&
+                  selectedOrderDetails.cancelReason && (
+                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl">
+                      <p className="text-sm text-red-700 dark:text-red-300">
+                        <span className="font-semibold">
+                          Cancellation Reason:
+                        </span>{" "}
+                        {selectedOrderDetails.cancelReason}
+                      </p>
+                    </div>
+                  )}
               </div>
 
               {/* Delivery Address */}
@@ -742,6 +962,7 @@ const MyOrders = () => {
               </div>
             </div>
 
+            {/* Action Buttons */}
             <div className="mt-6 flex gap-3">
               {selectedOrderDetails.trackingNumber && (
                 <Link
@@ -753,6 +974,21 @@ const MyOrders = () => {
                   Track Order
                 </Link>
               )}
+
+              {/* Cancel button in details modal */}
+              {canCancelOrder(selectedOrderDetails.status) && (
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    handleCancelOrder(selectedOrderDetails);
+                  }}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2"
+                >
+                  <FiXCircle className="w-5 h-5" />
+                  Cancel Order
+                </button>
+              )}
+
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition"

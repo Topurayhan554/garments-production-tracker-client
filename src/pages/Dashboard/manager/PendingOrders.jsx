@@ -11,8 +11,10 @@ import {
   FiDollarSign,
   FiMapPin,
 } from "react-icons/fi";
-import { ButtonLoader } from "../../../components/ButtonLoader";
+import ButtonLoader from "../../../components/ButtonLoader";
 import { SkeletonTable } from "../../../components/Loading";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { toast } from "react-toastify";
 
 const PendingOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -27,199 +29,221 @@ const PendingOrders = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  const mockOrders = [
-    {
-      id: "#1234",
-      customer: "Sarah Johnson",
-      customerEmail: "sarah@example.com",
-      phone: "+880 1234-567890",
-      product: "Premium Cotton T-Shirt",
-      quantity: 2,
-      size: "L",
-      color: "Navy Blue",
-      amount: 51.98,
-      date: "2024-02-03",
-      address: "123 Main St, Mirpur, Dhaka-1216",
-      paymentMethod: "Cash on Delivery",
-      notes: "Please deliver between 2-5 PM",
-      avatar: "https://i.pravatar.cc/100?img=5",
-    },
-    {
-      id: "#1235",
-      customer: "Mike Chen",
-      customerEmail: "mike@example.com",
-      phone: "+880 1234-567891",
-      product: "Classic Denim Jacket",
-      quantity: 1,
-      size: "M",
-      color: "Blue",
-      amount: 89.99,
-      date: "2024-02-03",
-      address: "456 Park Ave, Gulshan, Dhaka-1212",
-      paymentMethod: "bKash",
-      notes: "Gift wrap requested",
-      avatar: "https://i.pravatar.cc/100?img=13",
-    },
-    {
-      id: "#1236",
-      customer: "Emily Rodriguez",
-      customerEmail: "emily@example.com",
-      phone: "+880 1234-567892",
-      product: "Sports Jersey",
-      quantity: 3,
-      size: "XL",
-      color: "Red",
-      amount: 119.97,
-      date: "2024-02-02",
-      address: "789 Oak Rd, Dhanmondi, Dhaka-1205",
-      paymentMethod: "Nagad",
-      notes: "",
-      avatar: "https://i.pravatar.cc/100?img=1",
-    },
-    {
-      id: "#1237",
-      customer: "David Lee",
-      customerEmail: "david@example.com",
-      phone: "+880 1234-567893",
-      product: "Winter Hoodie",
-      quantity: 1,
-      size: "L",
-      color: "Black",
-      amount: 54.99,
-      date: "2024-02-02",
-      address: "321 Elm St, Banani, Dhaka-1213",
-      paymentMethod: "Cash on Delivery",
-      notes: "Call before delivery",
-      avatar: "https://i.pravatar.cc/100?img=8",
-    },
-    {
-      id: "#1238",
-      customer: "Lisa Park",
-      customerEmail: "lisa@example.com",
-      phone: "+880 1234-567894",
-      product: "Casual Polo Shirt",
-      quantity: 2,
-      size: "M",
-      color: "White",
-      amount: 65.98,
-      date: "2024-02-01",
-      address: "654 Pine Ave, Uttara, Dhaka-1230",
-      paymentMethod: "Rocket",
-      notes: "Leave at reception",
-      avatar: "https://i.pravatar.cc/100?img=9",
-    },
-    {
-      id: "#1239",
-      customer: "James Wilson",
-      customerEmail: "james@example.com",
-      phone: "+880 1234-567895",
-      product: "Formal Business Shirt",
-      quantity: 1,
-      size: "L",
-      color: "Sky Blue",
-      amount: 45.99,
-      date: "2024-02-01",
-      address: "987 Maple Dr, Motijheel, Dhaka-1000",
-      paymentMethod: "Cash on Delivery",
-      notes: "Urgent delivery needed",
-      avatar: "https://i.pravatar.cc/100?img=15",
-    },
+  const axiosSecure = useAxiosSecure(); // ✅ Initialize axios
+
+  // Rejection reasons
+  const rejectReasons = [
+    "Out of stock",
+    "Invalid delivery address",
+    "Payment verification failed",
+    "Product discontinued",
+    "Duplicate order",
+    "Suspicious activity",
+    "Other reason",
   ];
 
-  // title
+  // Page title
   useEffect(() => {
     document.title = "Dashboard - Pending Orders | GarmentTrack";
-
     return () => {
       document.title = "GarmentTrack";
     };
   }, []);
 
+  // ✅ Load orders from database
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setOrders(mockOrders);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    const fetchPendingOrders = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch only pending orders
+        const res = await axiosSecure.get("/orders?status=pending");
+        setOrders(res.data);
+      } catch (error) {
+        console.error("Error fetching pending orders:", error);
+        toast.error("Failed to load pending orders");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    fetchPendingOrders();
+  }, [axiosSecure]);
+
+  // Filter orders by search query
   const filteredOrders = orders.filter(
     (o) =>
       !searchQuery ||
-      o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.product.toLowerCase().includes(searchQuery.toLowerCase()),
+      o.orderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.productName?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  // Calculate stats
   const stats = {
     total: orders.length,
-    totalValue: orders.reduce((sum, o) => sum + o.amount, 0),
+    totalValue: orders.reduce((sum, o) => sum + (o.total || 0), 0),
     avgValue:
       orders.length > 0
-        ? orders.reduce((sum, o) => sum + o.amount, 0) / orders.length
+        ? orders.reduce((sum, o) => sum + (o.total || 0), 0) / orders.length
         : 0,
   };
 
+  // Select all/none
   const handleSelectAll = (e) =>
-    setSelectedOrders(e.target.checked ? filteredOrders.map((o) => o.id) : []);
+    setSelectedOrders(e.target.checked ? filteredOrders.map((o) => o._id) : []);
+
+  // Toggle single selection
   const handleSelectOrder = (id) =>
     setSelectedOrders((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
 
+  // Open approve modal
   const handleApproveClick = (order) => {
     setOrderToProcess(order);
     setShowApproveModal(true);
   };
+
+  // ✅ Approve single order - API call
   const handleApproveConfirm = async () => {
     setIsProcessing(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setOrders(orders.filter((o) => o.id !== orderToProcess.id));
-    setShowApproveModal(false);
-    setOrderToProcess(null);
-    setIsProcessing(false);
+
+    try {
+      const res = await axiosSecure.patch(
+        `/orders/${orderToProcess._id}/status`,
+        {
+          status: "confirmed",
+          confirmedAt: new Date(),
+        },
+      );
+
+      if (res.data.success) {
+        // Remove from local state
+        setOrders((prev) => prev.filter((o) => o._id !== orderToProcess._id));
+        toast.success(`Order ${orderToProcess.orderId} approved! ✅`);
+        setShowApproveModal(false);
+        setOrderToProcess(null);
+      }
+    } catch (error) {
+      console.error("Approve order error:", error);
+      toast.error(error.response?.data?.message || "Failed to approve order");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  // Open reject modal
   const handleRejectClick = (order) => {
     setOrderToProcess(order);
     setRejectReason("");
     setShowRejectModal(true);
   };
+
+  // Reject single order - API call
   const handleRejectConfirm = async () => {
     if (!rejectReason.trim()) {
-      alert("Please provide a reason");
+      toast.warning("Please provide a reason for rejection");
       return;
     }
+
     setIsProcessing(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setOrders(orders.filter((o) => o.id !== orderToProcess.id));
-    setShowRejectModal(false);
-    setOrderToProcess(null);
-    setRejectReason("");
-    setIsProcessing(false);
+
+    try {
+      const res = await axiosSecure.patch(
+        `/orders/${orderToProcess._id}/status`,
+        {
+          status: "cancelled",
+          cancelReason: rejectReason,
+          cancelledAt: new Date(),
+          cancelledBy: "admin",
+        },
+      );
+
+      if (res.data.success) {
+        // Remove from local state
+        setOrders((prev) => prev.filter((o) => o._id !== orderToProcess._id));
+        toast.success(`Order ${orderToProcess.orderId} rejected! 🚫`);
+        setShowRejectModal(false);
+        setOrderToProcess(null);
+        setRejectReason("");
+      }
+    } catch (error) {
+      console.error("Reject order error:", error);
+      toast.error(error.response?.data?.message || "Failed to reject order");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  //Bulk approve orders
   const handleBulkApprove = async () => {
-    if (confirm(`Approve ${selectedOrders.length} orders?`)) {
-      setIsProcessing(true);
-      await new Promise((r) => setTimeout(r, 2000));
-      setOrders(orders.filter((o) => !selectedOrders.includes(o.id)));
-      setSelectedOrders([]);
+    if (selectedOrders.length === 0) return;
+
+    if (!window.confirm(`Approve ${selectedOrders.length} orders?`)) return;
+
+    setIsProcessing(true);
+
+    try {
+      // Call bulk approve API
+      const res = await axiosSecure.post("/orders/bulk-approve", {
+        orderIds: selectedOrders,
+      });
+
+      if (res.data.success) {
+        // Remove approved orders from local state
+        setOrders((prev) =>
+          prev.filter((o) => !selectedOrders.includes(o._id)),
+        );
+        toast.success(`${res.data.approvedCount} orders approved! ✅`);
+        setSelectedOrders([]);
+      }
+    } catch (error) {
+      console.error("Bulk approve error:", error);
+      toast.error(error.response?.data?.message || "Failed to approve orders");
+    } finally {
       setIsProcessing(false);
     }
   };
 
+  // Bulk reject orders
   const handleBulkReject = async () => {
-    const reason = prompt(`Reject ${selectedOrders.length} orders?\nReason:`);
-    if (reason) {
-      setIsProcessing(true);
-      await new Promise((r) => setTimeout(r, 2000));
-      setOrders(orders.filter((o) => !selectedOrders.includes(o.id)));
-      setSelectedOrders([]);
+    if (selectedOrders.length === 0) return;
+
+    const reason = window.prompt(
+      `Reject ${selectedOrders.length} orders?\n\nProvide reason:`,
+    );
+
+    if (!reason || !reason.trim()) {
+      toast.warning("Rejection cancelled - no reason provided");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Call bulk reject API
+      const res = await axiosSecure.post("/orders/bulk-reject", {
+        orderIds: selectedOrders,
+        cancelReason: reason,
+      });
+
+      if (res.data.success) {
+        // Remove rejected orders from local state
+        setOrders((prev) =>
+          prev.filter((o) => !selectedOrders.includes(o._id)),
+        );
+        toast.success(`${res.data.rejectedCount} orders rejected! 🚫`);
+        setSelectedOrders([]);
+      }
+    } catch (error) {
+      console.error("Bulk reject error:", error);
+      toast.error(error.response?.data?.message || "Failed to reject orders");
+    } finally {
       setIsProcessing(false);
     }
   };
 
+  // View order details
   const handleViewDetails = (order) => {
     setSelectedOrderDetails(order);
     setShowDetailsModal(true);
@@ -228,6 +252,7 @@ const PendingOrders = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Pending Orders
@@ -237,24 +262,25 @@ const PendingOrders = () => {
           </p>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           {[
             {
               label: "Pending Orders",
               value: stats.total,
-              icon: <FiClock />,
+              icon: <FiClock className="w-6 h-6" />,
               color: "yellow",
             },
             {
               label: "Total Value",
               value: `$${stats.totalValue.toFixed(2)}`,
-              icon: <FiDollarSign />,
+              icon: <FiDollarSign className="w-6 h-6" />,
               color: "green",
             },
             {
               label: "Avg Order Value",
               value: `$${stats.avgValue.toFixed(2)}`,
-              icon: <FiPackage />,
+              icon: <FiPackage className="w-6 h-6" />,
               color: "blue",
             },
           ].map((stat, i) => (
@@ -287,13 +313,14 @@ const PendingOrders = () => {
           ))}
         </div>
 
+        {/* Search & Bulk Actions */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search orders..."
+                placeholder="Search by order ID, customer, or product..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -304,7 +331,7 @@ const PendingOrders = () => {
                 <button
                   onClick={handleBulkApprove}
                   disabled={isProcessing}
-                  className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiCheckCircle className="w-5 h-5" />
                   Approve ({selectedOrders.length})
@@ -312,7 +339,7 @@ const PendingOrders = () => {
                 <button
                   onClick={handleBulkReject}
                   disabled={isProcessing}
-                  className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiXCircle className="w-5 h-5" />
                   Reject ({selectedOrders.length})
@@ -322,6 +349,7 @@ const PendingOrders = () => {
           </div>
         </div>
 
+        {/* Orders Table */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
           {isLoading ? (
             <div className="p-6">
@@ -336,7 +364,9 @@ const PendingOrders = () => {
                 No Pending Orders
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                All orders processed!
+                {searchQuery
+                  ? "No orders match your search"
+                  : "All orders have been processed!"}
               </p>
             </div>
           ) : (
@@ -348,7 +378,8 @@ const PendingOrders = () => {
                       <input
                         type="checkbox"
                         checked={
-                          selectedOrders.length === filteredOrders.length
+                          selectedOrders.length === filteredOrders.length &&
+                          filteredOrders.length > 0
                         }
                         onChange={handleSelectAll}
                         className="w-4 h-4 text-blue-600 rounded cursor-pointer"
@@ -380,43 +411,36 @@ const PendingOrders = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredOrders.map((order) => (
                     <tr
-                      key={order.id}
+                      key={order._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
-                          checked={selectedOrders.includes(order.id)}
-                          onChange={() => handleSelectOrder(order.id)}
+                          checked={selectedOrders.includes(order._id)}
+                          onChange={() => handleSelectOrder(order._id)}
                           className="w-4 h-4 text-blue-600 rounded cursor-pointer"
                         />
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-blue-600 dark:text-blue-400">
-                          {order.id}
+                          {order.orderId}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={order.avatar}
-                            alt={order.customer}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {order.customer}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {order.customerEmail}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {order.customer?.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {order.customer?.email}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">
-                            {order.product}
+                            {order.productName}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {order.size} • {order.color}
@@ -430,18 +454,20 @@ const PendingOrders = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          ${order.amount.toFixed(2)}
+                          ${(order.total || 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(order.date).toLocaleDateString()}
+                        {new Date(
+                          order.orderDate || order.createdAt,
+                        ).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewDetails(order)}
                             className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                            title="View"
+                            title="View Details"
                           >
                             <FiEye className="w-5 h-5" />
                           </button>
@@ -467,12 +493,17 @@ const PendingOrders = () => {
               </table>
             </div>
           )}
+
+          {/* Footer */}
           {filteredOrders.length > 0 && (
             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Showing {filteredOrders.length} of {orders.length} orders
               </p>
-              <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+              <button
+                onClick={() => toast.info("Export feature coming soon!")}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2"
+              >
                 <FiDownload className="w-4 h-4" />
                 Export
               </button>
@@ -481,21 +512,24 @@ const PendingOrders = () => {
         </div>
       </div>
 
+      {/* Order Details Modal */}
       {showDetailsModal && selectedOrderDetails && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Order {selectedOrderDetails.id}
+                Order {selectedOrderDetails.orderId}
               </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
               >
-                <FiXCircle className="w-6 h-6" />
+                ✕
               </button>
             </div>
+
             <div className="space-y-6">
+              {/* Customer Info */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FiUser className="w-5 h-5" />
@@ -507,7 +541,7 @@ const PendingOrders = () => {
                       Name
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.customer}
+                      {selectedOrderDetails.customer?.name}
                     </p>
                   </div>
                   <div>
@@ -515,7 +549,7 @@ const PendingOrders = () => {
                       Email
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.customerEmail}
+                      {selectedOrderDetails.customer?.email}
                     </p>
                   </div>
                   <div>
@@ -523,7 +557,7 @@ const PendingOrders = () => {
                       Phone
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.phone}
+                      {selectedOrderDetails.customer?.phone}
                     </p>
                   </div>
                   <div>
@@ -536,10 +570,12 @@ const PendingOrders = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Product Info */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FiPackage className="w-5 h-5" />
-                  Product
+                  Product Details
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -547,12 +583,12 @@ const PendingOrders = () => {
                       Product
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {selectedOrderDetails.product}
+                      {selectedOrderDetails.productName}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Qty
+                      Quantity
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
                       {selectedOrderDetails.quantity}
@@ -579,7 +615,7 @@ const PendingOrders = () => {
                       Total
                     </p>
                     <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                      ${selectedOrderDetails.amount.toFixed(2)}
+                      ${(selectedOrderDetails.total || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
@@ -587,23 +623,32 @@ const PendingOrders = () => {
                       Date
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {new Date(selectedOrderDetails.date).toLocaleDateString()}
+                      {new Date(
+                        selectedOrderDetails.orderDate ||
+                          selectedOrderDetails.createdAt,
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Delivery Address */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FiMapPin className="w-5 h-5" />
-                  Delivery
+                  Delivery Address
                 </h3>
                 <p className="text-gray-900 dark:text-white">
-                  {selectedOrderDetails.address}
+                  {selectedOrderDetails.deliveryAddress?.street},{" "}
+                  {selectedOrderDetails.deliveryAddress?.area},{" "}
+                  {selectedOrderDetails.deliveryAddress?.city}
+                  {selectedOrderDetails.deliveryAddress?.zip &&
+                    ` - ${selectedOrderDetails.deliveryAddress.zip}`}
                 </p>
                 {selectedOrderDetails.notes && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Notes
+                      Special Notes
                     </p>
                     <p className="text-gray-900 dark:text-white italic">
                       "{selectedOrderDetails.notes}"
@@ -612,6 +657,8 @@ const PendingOrders = () => {
                 )}
               </div>
             </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => {
@@ -638,7 +685,8 @@ const PendingOrders = () => {
         </div>
       )}
 
-      {showApproveModal && (
+      {/* Approve Confirmation Modal */}
+      {showApproveModal && orderToProcess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -648,12 +696,19 @@ const PendingOrders = () => {
               Approve Order?
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-              Approve order "{orderToProcess?.id}" for{" "}
-              {orderToProcess?.customer}?
+              Approve order "{orderToProcess.orderId}" for{" "}
+              {orderToProcess.customer?.name}?
+              <br />
+              <span className="font-semibold">
+                Amount: ${(orderToProcess.total || 0).toFixed(2)}
+              </span>
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowApproveModal(false)}
+                onClick={() => {
+                  setShowApproveModal(false);
+                  setOrderToProcess(null);
+                }}
                 disabled={isProcessing}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
               >
@@ -675,7 +730,8 @@ const PendingOrders = () => {
         </div>
       )}
 
-      {showRejectModal && (
+      {/* Reject Confirmation Modal */}
+      {showRejectModal && orderToProcess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -685,23 +741,43 @@ const PendingOrders = () => {
               Reject Order?
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-              Reason for rejecting "{orderToProcess?.id}"
+              Provide reason for rejecting "{orderToProcess.orderId}"
             </p>
+
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Reason *
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Rejection Reason *
               </label>
-              <textarea
+              <select
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                rows={4}
-                placeholder="Out of stock, Invalid address, etc."
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
-              />
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 mb-3"
+              >
+                <option value="">Select a reason</option>
+                {rejectReasons.map((reason) => (
+                  <option key={reason} value={reason}>
+                    {reason}
+                  </option>
+                ))}
+              </select>
+
+              {rejectReason === "Other reason" && (
+                <textarea
+                  placeholder="Please specify the reason..."
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                />
+              )}
             </div>
+
             <div className="flex gap-3">
               <button
-                onClick={() => setShowRejectModal(false)}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setOrderToProcess(null);
+                  setRejectReason("");
+                }}
                 disabled={isProcessing}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
               >
@@ -709,8 +785,8 @@ const PendingOrders = () => {
               </button>
               <button
                 onClick={handleRejectConfirm}
-                disabled={isProcessing}
-                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center"
+                disabled={isProcessing || !rejectReason}
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isProcessing ? <ButtonLoader text="Rejecting..." /> : "Reject"}
               </button>

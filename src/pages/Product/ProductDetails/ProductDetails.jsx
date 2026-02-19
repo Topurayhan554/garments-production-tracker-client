@@ -72,7 +72,6 @@ const ProductDetails = () => {
         setIsLoading(false);
       }
     };
-
     if (id) {
       fetchProduct();
     }

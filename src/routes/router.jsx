@@ -24,6 +24,7 @@ import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
 import CartPage from "../pages/CartPage/CartPage";
 import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 import Profile from "../pages/Dashboard/Profile/Profile";
+import FavoritesPage from "../pages/FavoritePage/FavoritePage";
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
             <CartPage />
           </PrivateRoute>
         ),
+      },
+      {
+        path: "/favorites",
+        element: <FavoritesPage />,
       },
     ],
   },

@@ -417,8 +417,26 @@ const AllProducts = () => {
 
 // Product Card Component
 export const ProductCard = ({ product, viewMode }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
+
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem("favorites")) || [];
+    return saved.some((p) => p._id === product._id);
+  });
+
+  const toggleFavorite = () => {
+    const saved = JSON.parse(localStorage.getItem("favorites")) || [];
+
+    if (isFavorite) {
+      const updated = saved.filter((p) => p._id !== product._id);
+      localStorage.setItem("favorites", JSON.stringify(updated));
+    } else {
+      localStorage.setItem("favorites", JSON.stringify([...saved, product]));
+    }
+
+    setIsFavorite(!isFavorite);
+    window.dispatchEvent(new Event("favoritesUpdated"));
+  };
 
   // Quick Add to Cart handler
   const handleQuickAdd = (e) => {
@@ -470,7 +488,7 @@ export const ProductCard = ({ product, viewMode }) => {
         {/* Quick Actions */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
-            onClick={() => setIsFavorite(!isFavorite)}
+            onClick={toggleFavorite}
             className={`p-2 rounded-full backdrop-blur-sm transition ${
               isFavorite
                 ? "bg-red-500 text-white"

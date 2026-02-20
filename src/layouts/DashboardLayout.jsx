@@ -18,6 +18,7 @@ import {
   FiTrendingUp,
 } from "react-icons/fi";
 import { ToastContainer } from "react-toastify";
+import useAuth from "../hooks/useAuth";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,14 +34,14 @@ const DashboardLayout = () => {
   }, []);
 
   // TODO: Get from your auth context
-  // const { user, logout } = useAuth();
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
-    photoURL: "https://i.pravatar.cc/150?img=12",
-    role: "admin", // Change to 'admin' or 'manager' to test different views
-    status: "approved",
-  };
+  const { user, logout } = useAuth();
+  // const user = {
+  //   name: "John Doe",
+  //   email: "john@example.com",
+  //   photoURL: "https://i.pravatar.cc/150?img=12",
+  //   role: "admin", // Change to 'admin' or 'manager' to test different views
+  //   status: "approved",
+  // };
 
   // Handle logout
   const handleLogout = () => {

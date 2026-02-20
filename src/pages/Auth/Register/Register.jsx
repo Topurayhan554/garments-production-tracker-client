@@ -13,6 +13,7 @@ import {
   FiPhone,
 } from "react-icons/fi";
 import useAuth from "../../../hooks/useAuth";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import SocialLogin from "../SocialLogin/SocialLogin";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -29,6 +30,7 @@ const Register = () => {
   } = useForm();
 
   const { signUpFunc, updateUserProfile } = useAuth();
+  const axiosSecure = useAxiosSecure();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -42,13 +44,11 @@ const Register = () => {
     const hasLower = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasMinLength = password.length >= 6;
-
     let score = 0;
     if (hasUpper) score++;
     if (hasLower) score++;
     if (hasNumber) score++;
     if (hasMinLength) score++;
-
     return { score, hasUpper, hasLower, hasNumber, hasMinLength };
   };
 
@@ -68,7 +68,6 @@ const Register = () => {
     return "Strong";
   };
 
-  // Save user to MongoDB
   const saveUserToDB = async (firebaseUser, extraData = {}) => {
     try {
       const userData = {
@@ -83,10 +82,7 @@ const Register = () => {
         createdAt: new Date(),
       };
 
-      await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/users`,
-        userData,
-      );
+      await axiosSecure.post("/users", userData);
     } catch (error) {
       if (error.response?.status !== 409) {
         console.error("Save user to DB error:", error);
@@ -99,11 +95,11 @@ const Register = () => {
     const profileImg = data.photo?.[0];
 
     try {
-      // Firebase signup
+      // 1.Firebase signup
       const userCredential = await signUpFunc(data.email, data.password);
       const firebaseUser = userCredential.user;
 
-      // Upload photo
+      // 2.imgbb photo upload
       let photoURL = "";
       if (profileImg) {
         const formData = new FormData();
@@ -115,13 +111,13 @@ const Register = () => {
         photoURL = imgRes.data.data.url;
       }
 
-      // Update Firebase profile
+      // 3.Firebase profile update
       await updateUserProfile({
         displayName: data.name,
         photoURL: photoURL || "",
       });
 
-      //Save user to MongoDB
+      // 4.axiosSecure to db save
       await saveUserToDB(
         { ...firebaseUser, displayName: data.name, photoURL },
         {
@@ -141,14 +137,11 @@ const Register = () => {
         message = "Password should be at least 6 characters.";
       } else if (error.code === "auth/invalid-email") {
         message = "Invalid email address.";
-      } else if (error.response && !error.response?.status === 409) {
-        message = "Image upload failed.";
       }
       toast.error(message);
     }
   };
 
-  // Input class helper
   const inputClass = (hasError) =>
     `block w-full pl-11 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
       hasError
@@ -270,7 +263,7 @@ const Register = () => {
                 )}
               </div>
 
-              {/* Phone Number */}
+              {/* Phone */}
               <div>
                 <label
                   htmlFor="phone"
@@ -326,7 +319,7 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Role Selection */}
+              {/* Role */}
               <div>
                 <label
                   htmlFor="role"
@@ -337,11 +330,7 @@ const Register = () => {
                 <select
                   {...register("role", { required: "Please select a role" })}
                   id="role"
-                  className={`block w-full px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
-                    errors.role
-                      ? "border-red-300 dark:border-red-600"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
+                  className={`block w-full px-4 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${errors.role ? "border-red-300 dark:border-red-600" : "border-gray-300 dark:border-gray-600"}`}
                 >
                   <option value="buyer">Buyer</option>
                   <option value="manager">Manager</option>
@@ -383,11 +372,7 @@ const Register = () => {
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     placeholder="••••••••"
-                    className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
-                      errors.password
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${errors.password ? "border-red-300 dark:border-red-600" : "border-gray-300 dark:border-gray-600"}`}
                   />
                   <button
                     type="button"
@@ -402,7 +387,6 @@ const Register = () => {
                   </button>
                 </div>
 
-                {/* Password Strength */}
                 {watchPassword && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2 mb-2">
@@ -474,11 +458,7 @@ const Register = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
                     placeholder="••••••••"
-                    className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${
-                      errors.confirmPassword
-                        ? "border-red-300 dark:border-red-600"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    className={`block w-full pl-11 pr-12 py-3 border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ${errors.confirmPassword ? "border-red-300 dark:border-red-600" : "border-gray-300 dark:border-gray-600"}`}
                   />
                   <button
                     type="button"

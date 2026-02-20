@@ -232,7 +232,7 @@ const ManageUsers = () => {
     setShowRoleModal(true);
   };
 
-  // ✅ Update user role
+  // Update user role
   const handleRoleChangeConfirm = async () => {
     if (newRole === userToEditRole.role) {
       toast.warning("Please select a different role");

@@ -170,7 +170,7 @@ const Navbar = () => {
                 )}
               </button>
 
-              {/* 🛒 Cart Icon */}
+              {/* Cart Icon */}
               {user && (
                 <div className="relative">
                   <button

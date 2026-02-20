@@ -12,8 +12,8 @@ import {
   FiShoppingBag,
 } from "react-icons/fi";
 import { SkeletonTable } from "../../../components/Loading";
-import useAxiosSecure from "../../../hooks/useAxiosSecure"; // ✅ Import করো
-import { useCart } from "../../../context/CartContext"; // ✅ Cart hook
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { useCart } from "../../../context/CartContext";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet-async";
 

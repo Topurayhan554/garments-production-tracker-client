@@ -66,7 +66,7 @@ const AllOrders = () => {
     };
   }, []);
 
-  // ✅ Fetch all orders from DB
+  // Fetch all orders from DB
   useEffect(() => {
     fetchOrders();
   }, []);

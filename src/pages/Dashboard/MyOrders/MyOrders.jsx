@@ -111,6 +111,7 @@ const MyOrders = () => {
   };
 
   const filteredOrders = getFilteredOrders();
+  console.log(filteredOrders);
 
   // Handle view details
   const handleViewDetails = (order) => {
@@ -640,7 +641,7 @@ const MyOrders = () => {
         )}
       </div>
 
-      {/* ✅ Cancel Order Confirmation Modal */}
+      {/* Cancel Order Confirmation Modal */}
       {showCancelModal && orderToCancel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">

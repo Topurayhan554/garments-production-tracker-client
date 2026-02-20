@@ -23,6 +23,7 @@ import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
 import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
 import CartPage from "../pages/CartPage/CartPage";
 import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
+import Profile from "../pages/Dashboard/Profile/Profile";
 
 export const router = createBrowserRouter([
   {
@@ -100,6 +101,10 @@ export const router = createBrowserRouter([
       {
         path: "all-products",
         element: <AllProducts />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
       },
 
       // admin

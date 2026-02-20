@@ -100,6 +100,52 @@ const ManageUsers = () => {
     pending: users.filter((u) => u.status === "pending").length,
   };
 
+  // users
+  const state = [
+    {
+      label: "Total",
+      value: stats.total,
+      icon: <FiUsers className="w-5 h-5" />,
+      color: "blue",
+    },
+    {
+      label: "Admins",
+      value: stats.admin,
+      icon: <FiShield className="w-5 h-5" />,
+      color: "purple",
+    },
+    {
+      label: "Managers",
+      value: stats.manager,
+      icon: <FiUsers className="w-5 h-5" />,
+      color: "green",
+    },
+    {
+      label: "Buyers",
+      value: stats.buyer,
+      icon: <FiUsers className="w-5 h-5" />,
+      color: "yellow",
+    },
+    {
+      label: "Active",
+      value: stats.active,
+      icon: <FiCheckCircle className="w-5 h-5" />,
+      color: "emerald",
+    },
+    {
+      label: "Inactive",
+      value: stats.inactive,
+      icon: <FiXCircle className="w-5 h-5" />,
+      color: "red",
+    },
+    {
+      label: "Pending",
+      value: stats.pending,
+      icon: <FiClock className="w-5 h-5" />,
+      color: "orange",
+    },
+  ];
+
   // ---- SELECT ----
   const handleSelectAll = (e) =>
     setSelectedUsers(e.target.checked ? filteredUsers.map((u) => u._id) : []);
@@ -312,50 +358,7 @@ const ManageUsers = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
-          {[
-            {
-              label: "Total",
-              value: stats.total,
-              icon: <FiUsers className="w-5 h-5" />,
-              color: "blue",
-            },
-            {
-              label: "Admins",
-              value: stats.admin,
-              icon: <FiShield className="w-5 h-5" />,
-              color: "purple",
-            },
-            {
-              label: "Managers",
-              value: stats.manager,
-              icon: <FiUsers className="w-5 h-5" />,
-              color: "green",
-            },
-            {
-              label: "Buyers",
-              value: stats.buyer,
-              icon: <FiUsers className="w-5 h-5" />,
-              color: "yellow",
-            },
-            {
-              label: "Active",
-              value: stats.active,
-              icon: <FiCheckCircle className="w-5 h-5" />,
-              color: "emerald",
-            },
-            {
-              label: "Inactive",
-              value: stats.inactive,
-              icon: <FiXCircle className="w-5 h-5" />,
-              color: "red",
-            },
-            {
-              label: "Pending",
-              value: stats.pending,
-              icon: <FiClock className="w-5 h-5" />,
-              color: "orange",
-            },
-          ].map((s, i) => (
+          {state.map((s, i) => (
             <div
               key={i}
               className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg"

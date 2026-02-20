@@ -15,6 +15,11 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {
+  availableColors,
+  availableSizes,
+  categories,
+} from "../../../data/data";
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -67,35 +72,6 @@ const AddProduct = () => {
 
   // Watch form values for preview
   const watchAllFields = watch();
-
-  // Available options
-  const categories = [
-    "T-Shirts",
-    "Shirts",
-    "Polo",
-    "Jackets",
-    "Hoodies",
-    "Sports",
-    "Casual",
-    "Formal",
-  ];
-
-  const availableSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
-
-  const availableColors = [
-    { name: "Black", code: "#000000" },
-    { name: "White", code: "#FFFFFF" },
-    { name: "Navy", code: "#000080" },
-    { name: "Gray", code: "#808080" },
-    { name: "Red", code: "#FF0000" },
-    { name: "Blue", code: "#0000FF" },
-    { name: "Green", code: "#008000" },
-    { name: "Yellow", code: "#FFFF00" },
-    { name: "Pink", code: "#FFC0CB" },
-    { name: "Orange", code: "#FFA500" },
-    { name: "Purple", code: "#800080" },
-    { name: "Brown", code: "#A52A2A" },
-  ];
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -274,7 +250,7 @@ const AddProduct = () => {
         updatedAt: new Date(),
       };
 
-      console.log("Submitting product:", productData);
+      // console.log("Submitting product:", productData);
 
       // 7. Save to MongoDB
       const res = await axiosSecure.post("/products", productData);

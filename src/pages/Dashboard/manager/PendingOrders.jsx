@@ -104,7 +104,7 @@ const PendingOrders = () => {
     setShowApproveModal(true);
   };
 
-  // ✅ Approve single order - API call
+  //  Approve single order - API call
   const handleApproveConfirm = async () => {
     setIsProcessing(true);
 
@@ -249,6 +249,27 @@ const PendingOrders = () => {
     setShowDetailsModal(true);
   };
 
+  const state = [
+    {
+      label: "Pending Orders",
+      value: stats.total,
+      icon: <FiClock className="w-6 h-6" />,
+      color: "yellow",
+    },
+    {
+      label: "Total Value",
+      value: `$${stats.totalValue.toFixed(2)}`,
+      icon: <FiDollarSign className="w-6 h-6" />,
+      color: "green",
+    },
+    {
+      label: "Avg Order Value",
+      value: `$${stats.avgValue.toFixed(2)}`,
+      icon: <FiPackage className="w-6 h-6" />,
+      color: "blue",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -264,26 +285,7 @@ const PendingOrders = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          {[
-            {
-              label: "Pending Orders",
-              value: stats.total,
-              icon: <FiClock className="w-6 h-6" />,
-              color: "yellow",
-            },
-            {
-              label: "Total Value",
-              value: `$${stats.totalValue.toFixed(2)}`,
-              icon: <FiDollarSign className="w-6 h-6" />,
-              color: "green",
-            },
-            {
-              label: "Avg Order Value",
-              value: `$${stats.avgValue.toFixed(2)}`,
-              icon: <FiPackage className="w-6 h-6" />,
-              color: "blue",
-            },
-          ].map((stat, i) => (
+          {state.map((stat, i) => (
             <div
               key={i}
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg"

@@ -11,135 +11,58 @@ import {
   FiAward,
   FiClock,
   FiShield,
+  FiZap,
+  FiHeart,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
+import { motion } from "framer-motion";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { toast } from "react-toastify";
+import { ProductCard } from "../../Product/AllProducts/AllProducts";
+import { bannerImages, steps, testimonials } from "../../../data/data";
 
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [activeBannerImage, setActiveBannerImage] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const axiosSecure = useAxiosSecure();
 
-  // Mock featured products - Replace with actual API call
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Premium Cotton T-Shirt",
-      image:
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
-      description: "High-quality cotton fabric with comfortable fit",
-      price: "$25.99",
-      category: "T-Shirts",
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      name: "Classic Denim Jacket",
-      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
-      description: "Durable denim with modern styling",
-      price: "$89.99",
-      category: "Jackets",
-      rating: 4.9,
-    },
-    {
-      id: 3,
-      name: "Formal Business Shirt",
-      image:
-        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400",
-      description: "Professional attire for business meetings",
-      price: "$45.99",
-      category: "Shirts",
-      rating: 4.7,
-    },
-    {
-      id: 4,
-      name: "Casual Polo Shirt",
-      image:
-        "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400",
-      description: "Comfortable casual wear for everyday use",
-      price: "$32.99",
-      category: "Polo",
-      rating: 4.6,
-    },
-    {
-      id: 5,
-      name: "Sports Jersey",
-      image:
-        "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=400",
-      description: "Breathable fabric for athletic performance",
-      price: "$39.99",
-      category: "Sports",
-      rating: 4.8,
-    },
-    {
-      id: 6,
-      name: "Winter Hoodie",
-      image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400",
-      description: "Warm and cozy for cold weather",
-      price: "$54.99",
-      category: "Hoodies",
-      rating: 4.9,
-    },
-  ];
+  // console.log("featured products", featuredProducts);
 
-  // How it works steps
-  const steps = [
-    {
-      step: "01",
-      title: "Browse Products",
-      description: "Explore our wide range of high-quality garment products",
-      icon: <FiPackage />,
-      color: "blue",
-    },
-    {
-      step: "02",
-      title: "Place Order",
-      description: "Select your items and place your order with ease",
-      icon: <FiShoppingCart />,
-      color: "green",
-    },
-    {
-      step: "03",
-      title: "Track Production",
-      description: "Monitor your order status in real-time",
-      icon: <FiTrendingUp />,
-      color: "purple",
-    },
-    {
-      step: "04",
-      title: "Receive Product",
-      description: "Get your quality products delivered on time",
-      icon: <FiCheckCircle />,
-      color: "yellow",
-    },
-  ];
+  // Fetch products from database (max 6)
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axiosSecure.get("/products");
 
-  // Customer testimonials
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      role: "Fashion Retailer",
-      image: "https://i.pravatar.cc/150?img=1",
-      rating: 5,
-      comment:
-        "GarmentTrack has revolutionized how we manage our production. The tracking system is incredibly intuitive and has saved us countless hours!",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      role: "Boutique Owner",
-      image: "https://i.pravatar.cc/150?img=2",
-      rating: 5,
-      comment:
-        "Outstanding quality and service! The platform makes it so easy to keep track of all our orders. Highly recommended for anyone in the garment business.",
-    },
-    {
-      id: 3,
-      name: "Emily Rodriguez",
-      role: "Online Store Manager",
-      image: "https://i.pravatar.cc/150?img=3",
-      rating: 5,
-      comment:
-        "The best investment we've made for our business. Real-time tracking and excellent customer support make all the difference.",
-    },
-  ];
+        // Ensure response.data is array
+        const products = Array.isArray(response.data)
+          ? response.data.slice(0, 6)
+          : [];
+
+        setFeaturedProducts(products);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load featured products");
+        setFeaturedProducts([]); // Set empty array on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, [axiosSecure]);
+
+  // Auto-rotate banner images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveBannerImage((prev) => (prev + 1) % bannerImages.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -157,159 +80,361 @@ const Home = () => {
     { number: "24/7", label: "Support Available", icon: <FiClock /> },
   ];
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+      },
+    },
+  };
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div className="bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
-        {/* Animated Background */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-200 to-pink-200 animate-gradient-xy"></div>
+
+        {/* Featured Image Carousel */}
+        <div className="absolute inset-0">
+          {bannerImages.map((image, index) => (
+            <motion.div
+              key={image.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: index === activeBannerImage ? 1 : 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0"
+            >
+              <img
+                src={image.url}
+                alt={image.caption}
+                className="w-full h-full object-cover opacity-40"
+              />
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-black/40"></div>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 animate-fade-in">
-            Welcome to
-            <span className="block bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent mt-2">
-              GarmentTrack
-            </span>
-          </h1>
+        {/* Animated Blobs */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 90, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl"
+          ></motion.div>
+          <motion.div
+            animate={{
+              scale: [1.2, 1, 1.2],
+              rotate: [90, 0, 90],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute top-0 right-0 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl"
+          ></motion.div>
+          <motion.div
+            animate={{
+              scale: [1, 1.3, 1],
+              rotate: [0, -90, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl"
+          ></motion.div>
+        </div>
 
-          <p className="text-xl sm:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto">
+        {/* Floating Products Animation */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 100 }}
+              animate={{
+                opacity: [0.1, 0.3, 0.1],
+                y: [100, -100],
+                x: [0, Math.random() * 100 - 50],
+              }}
+              transition={{
+                duration: 10 + i * 2,
+                repeat: Infinity,
+                delay: i * 2,
+              }}
+              className="absolute"
+              style={{
+                left: `${10 + i * 15}%`,
+                top: `${20 + (i % 3) * 20}%`,
+              }}
+            >
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <FiPackage className="w-8 h-8 text-white" />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              Welcome to
+              <motion.span
+                className="block bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 bg-clip-text text-transparent mt-2"
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                GarmentTrack
+              </motion.span>
+            </motion.h1>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-xl sm:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto"
+          >
             Your complete solution for managing garment production and orders.
             Track, manage, and deliver with confidence.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
             <Link
               to="/all-products"
               className="group px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
+              <FiZap className="w-5 h-5" />
               <span>Browse Products</span>
               <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
 
             <Link
               to="/register"
-              className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
+              className="px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
             >
               Get Started Free
             </Link>
-          </div>
+          </motion.div>
 
           {/* Trust Badges */}
-          <div className="mt-16 flex flex-wrap justify-center gap-8 text-white/80">
-            <div className="flex items-center gap-2">
-              <FiShield className="w-5 h-5" />
-              <span>Secure Payments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FiCheckCircle className="w-5 h-5" />
-              <span>Quality Guaranteed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FiClock className="w-5 h-5" />
-              <span>Fast Delivery</span>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9, duration: 0.8 }}
+            className="mt-16 flex flex-wrap justify-center gap-8 text-white/80"
+          >
+            {[
+              { icon: <FiShield />, text: "Secure Payments" },
+              { icon: <FiCheckCircle />, text: "Quality Guaranteed" },
+              { icon: <FiClock />, text: "Fast Delivery" },
+            ].map((badge, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.1 }}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                {badge.icon}
+                <span>{badge.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Banner Image Navigation Dots */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+            className="mt-12 flex justify-center gap-3"
+          >
+            {bannerImages.map((_, index) => (
+              <motion.button
+                key={index}
+                onClick={() => setActiveBannerImage(index)}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                className={`rounded-full transition-all duration-300 ${
+                  index === activeBannerImage
+                    ? "bg-white w-8 h-3"
+                    : "bg-white/50 w-3 h-3 hover:bg-white/75"
+                }`}
+              />
+            ))}
+          </motion.div>
+
+          {/* Banner Image Info */}
+          <motion.div
+            key={activeBannerImage}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mt-6 text-white"
+          >
+            <h3 className="text-2xl font-bold">
+              {bannerImages[activeBannerImage].caption}
+            </h3>
+            <p className="text-blue-100 mt-2">
+              {bannerImages[activeBannerImage].description}
+            </p>
+          </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+        >
+          <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-1.5 h-1.5 bg-white rounded-full mt-2"
+            />
+          </div>
+        </motion.div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section with Counter Animation */}
       <section className="py-16 bg-white dark:bg-gray-800 -mt-20 relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {stats.map((stat, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                variants={itemVariants}
+                whileHover={{ scale: 1.05 }}
+                className="text-center p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl mx-auto mb-4">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, delay: index * 0.2 }}
+                  className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl mx-auto mb-4"
+                >
                   {stat.icon}
-                </div>
+                </motion.div>
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   {stat.number}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Featured Products Section - DB Integration */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Featured Products
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Explore our premium collection of high-quality garments
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105"
-              >
-                <div className="relative overflow-hidden h-64">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    {product.category}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-pulse"
+                >
+                  <div className="h-64 bg-gray-300 dark:bg-gray-700"></div>
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                    <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {featuredProducts.map((product) => (
+                <motion.div
+                  key={product._id}
+                  variants={itemVariants}
+                  whileHover={{ y: -10 }}
+                >
+                  <ProductCard product={product} viewMode="grid" />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
-                <div className="p-6">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FiStar
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(product.rating)
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-300 dark:text-gray-600"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                      ({product.rating})
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    {product.name}
-                  </h3>
-
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    {product.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {product.price}
-                    </span>
-
-                    <Link
-                      to={`/product/${product.id}`}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-12"
+          >
             <Link
               to="/all-products"
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -317,49 +442,68 @@ const Home = () => {
               <span>View All Products</span>
               <FiArrowRight />
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* How It Works Section */}
       <section className="py-20 bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               How It Works
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Simple steps to get started with GarmentTrack
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {steps.map((step, index) => (
-              <div key={index} className="relative group">
-                {/* Connecting Line (except last item) */}
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                className="relative group"
+              >
+                {/* Connecting Line */}
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 opacity-30 -z-10"></div>
+                  <div className="hidden lg:block absolute top-16 left-full w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 -z-10">
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.2, duration: 0.5 }}
+                      className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
+                      style={{ transformOrigin: "left" }}
+                    />
+                  </div>
                 )}
 
                 <div className="text-center">
-                  <div className="relative inline-block mb-6">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="relative inline-block mb-6"
+                  >
                     <div
-                      className={`w-32 h-32 bg-gradient-to-br ${
-                        step.color === "blue"
-                          ? "from-blue-400 to-blue-600"
-                          : step.color === "green"
-                            ? "from-green-400 to-green-600"
-                            : step.color === "purple"
-                              ? "from-purple-400 to-purple-600"
-                              : "from-yellow-400 to-yellow-600"
-                      } rounded-full flex items-center justify-center text-white text-4xl shadow-xl group-hover:scale-110 transition-transform duration-300`}
+                      className={`w-32 h-32 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center text-white text-4xl shadow-xl`}
                     >
                       {step.icon}
                     </div>
-                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-2xl font-bold text-gray-900 dark:text-white shadow-lg">
+                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-2xl font-bold text-gray-900 dark:text-white shadow-lg border-4 border-blue-600">
                       {step.step}
                     </div>
-                  </div>
+                  </motion.div>
 
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
                     {step.title}
@@ -369,30 +513,43 @@ const Home = () => {
                     {step.description}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Customer Testimonials */}
       <section className="py-20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               What Our Customers Say
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               Real feedback from real customers
             </p>
-          </div>
+          </motion.div>
 
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12 relative">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12 relative overflow-hidden">
+              {/* Background Decoration */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full filter blur-3xl"></div>
+
               {/* Quote Icon */}
-              <div className="absolute top-8 left-8 text-blue-600 opacity-20">
+              <div className="absolute top-8 left-8 text-blue-600 opacity-10">
                 <svg
-                  className="w-16 h-16"
+                  className="w-20 h-20"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -400,21 +557,33 @@ const Home = () => {
                 </svg>
               </div>
 
-              <div className="relative z-10">
+              <motion.div
+                key={activeTestimonial}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.5 }}
+                className="relative z-10"
+              >
                 <div className="flex flex-col items-center text-center mb-8">
-                  <img
+                  <motion.img
+                    whileHover={{ scale: 1.1 }}
                     src={testimonials[activeTestimonial].image}
                     alt={testimonials[activeTestimonial].name}
-                    className="w-20 h-20 rounded-full border-4 border-blue-600 mb-4"
+                    className="w-24 h-24 rounded-full border-4 border-blue-600 mb-4 shadow-xl"
                   />
 
                   <div className="flex gap-1 mb-4">
                     {[...Array(testimonials[activeTestimonial].rating)].map(
                       (_, i) => (
-                        <FiStar
+                        <motion.div
                           key={i}
-                          className="w-5 h-5 text-yellow-400 fill-yellow-400"
-                        />
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          <FiStar className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+                        </motion.div>
                       ),
                     )}
                   </div>
@@ -434,26 +603,58 @@ const Home = () => {
                 {/* Dots Navigation */}
                 <div className="flex justify-center gap-2">
                   {testimonials.map((_, index) => (
-                    <button
+                    <motion.button
                       key={index}
                       onClick={() => setActiveTestimonial(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`rounded-full transition-all duration-300 ${
                         index === activeTestimonial
-                          ? "bg-blue-600 w-8"
-                          : "bg-gray-300 dark:bg-gray-600"
+                          ? "bg-blue-600 w-8 h-3"
+                          : "bg-gray-300 dark:bg-gray-600 w-3 h-3"
                       }`}
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
+
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 opacity-20">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                y: [0, -30, 0],
+                opacity: [0.2, 0.5, 0.2],
+              }}
+              transition={{
+                duration: 3 + i * 0.5,
+                repeat: Infinity,
+                delay: i * 0.2,
+              }}
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+        >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Ready to Get Started?
           </h2>
@@ -463,46 +664,25 @@ const Home = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/register"
-              className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            >
-              Create Free Account
-            </Link>
-            <Link
-              to="/contact"
-              className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
-            >
-              Contact Sales
-            </Link>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                to="/register"
+                className="inline-block px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+              >
+                Create Free Account
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                to="/contact"
+                className="inline-block px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300"
+              >
+                Contact Sales
+              </Link>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
-
-      {/* Additional CSS for animations */}
-      {/* <style jsx>{`
-        @keyframes blob {
-          0%,
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style> */}
     </div>
   );
 };

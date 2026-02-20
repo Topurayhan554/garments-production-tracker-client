@@ -112,6 +112,57 @@ const AllOrders = () => {
     totalRevenue: orders.reduce((sum, o) => sum + (o.total || 0), 0),
   };
 
+  const state = [
+    {
+      label: "Total",
+      value: stats.total,
+      icon: <FiShoppingBag className="w-5 h-5" />,
+      color: "blue",
+    },
+    {
+      label: "Pending",
+      value: stats.pending,
+      icon: <FiClock className="w-5 h-5" />,
+      color: "yellow",
+    },
+    {
+      label: "Confirmed",
+      value: stats.confirmed,
+      icon: <FiCheckCircle className="w-5 h-5" />,
+      color: "cyan",
+    },
+    {
+      label: "Production",
+      value: stats.inProduction,
+      icon: <FiPackage className="w-5 h-5" />,
+      color: "purple",
+    },
+    {
+      label: "Shipping",
+      value: stats.inTransit,
+      icon: <FiTruck className="w-5 h-5" />,
+      color: "indigo",
+    },
+    {
+      label: "Delivered",
+      value: stats.delivered,
+      icon: <FiCheckCircle className="w-5 h-5" />,
+      color: "green",
+    },
+    {
+      label: "Cancelled",
+      value: stats.cancelled,
+      icon: <FiXCircle className="w-5 h-5" />,
+      color: "red",
+    },
+    {
+      label: "Revenue",
+      value: `$${stats.totalRevenue.toFixed(0)}`,
+      icon: <FiDollarSign className="w-5 h-5" />,
+      color: "emerald",
+    },
+  ];
+
   // ---- SELECT ----
   const handleSelectAll = (e) =>
     setSelectedOrders(e.target.checked ? filteredOrders.map((o) => o._id) : []);
@@ -152,7 +203,7 @@ const AllOrders = () => {
     setShowEditModal(true);
   };
 
-  // ✅ Save edited order
+  // Save edited order
   const handleEditSave = async () => {
     setIsProcessing(true);
     try {
@@ -207,7 +258,7 @@ const AllOrders = () => {
     setShowDeleteModal(true);
   };
 
-  // ✅ Delete single order
+  // Delete single order
   const handleDeleteConfirm = async () => {
     setIsProcessing(true);
     try {
@@ -226,7 +277,7 @@ const AllOrders = () => {
     }
   };
 
-  // ✅ Bulk delete
+  // Bulk delete
   const handleBulkDelete = async () => {
     if (
       !window.confirm(
@@ -296,56 +347,7 @@ const AllOrders = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
-          {[
-            {
-              label: "Total",
-              value: stats.total,
-              icon: <FiShoppingBag className="w-5 h-5" />,
-              color: "blue",
-            },
-            {
-              label: "Pending",
-              value: stats.pending,
-              icon: <FiClock className="w-5 h-5" />,
-              color: "yellow",
-            },
-            {
-              label: "Confirmed",
-              value: stats.confirmed,
-              icon: <FiCheckCircle className="w-5 h-5" />,
-              color: "cyan",
-            },
-            {
-              label: "Production",
-              value: stats.inProduction,
-              icon: <FiPackage className="w-5 h-5" />,
-              color: "purple",
-            },
-            {
-              label: "Shipping",
-              value: stats.inTransit,
-              icon: <FiTruck className="w-5 h-5" />,
-              color: "indigo",
-            },
-            {
-              label: "Delivered",
-              value: stats.delivered,
-              icon: <FiCheckCircle className="w-5 h-5" />,
-              color: "green",
-            },
-            {
-              label: "Cancelled",
-              value: stats.cancelled,
-              icon: <FiXCircle className="w-5 h-5" />,
-              color: "red",
-            },
-            {
-              label: "Revenue",
-              value: `$${stats.totalRevenue.toFixed(0)}`,
-              icon: <FiDollarSign className="w-5 h-5" />,
-              color: "emerald",
-            },
-          ].map((s, i) => (
+          {state.map((s, i) => (
             <div
               key={i}
               className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg"

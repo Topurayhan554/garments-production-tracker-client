@@ -6,6 +6,11 @@ import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { ToastContainer, toast } from "react-toastify";
 import Loading from "../../../components/Loading";
+import {
+  availableColors,
+  availableSizes,
+  categories,
+} from "../../../data/data";
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -39,32 +44,6 @@ const EditProduct = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Available options
-  const categories = [
-    "T-Shirts",
-    "Jackets",
-    "Shirts",
-    "Polo",
-    "Sports",
-    "Hoodies",
-  ];
-
-  const availableSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-  const availableColors = [
-    "Black",
-    "White",
-    "Gray",
-    "Red",
-    "Blue",
-    "Green",
-    "Yellow",
-    "Pink",
-    "Purple",
-    "Brown",
-    "Navy",
-    "Maroon",
-  ];
 
   // Fetch product data
   const { data: product, isLoading } = useQuery({

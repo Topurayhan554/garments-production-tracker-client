@@ -3,8 +3,6 @@ import { useForm } from "react-hook-form";
 import {
   FiMail,
   FiPhone,
-  FiMapPin,
-  FiClock,
   FiSend,
   FiUser,
   FiMessageSquare,
@@ -16,6 +14,7 @@ import {
   FiLinkedin,
 } from "react-icons/fi";
 import ButtonLoader from "../../../components/ButtonLoader";
+import { contactInfo, faqs } from "../../../data/data";
 
 const ContactUs = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -45,7 +44,6 @@ const ContactUs = () => {
     try {
       console.log("Contact form data:", data);
 
-
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -61,58 +59,6 @@ const ContactUs = () => {
       );
     }
   };
-
-  // Contact information
-  const contactInfo = [
-    {
-      icon: <FiMapPin />,
-      title: "Visit Us",
-      details: ["123 Garment Street", "Dhaka, Bangladesh 1200"],
-      color: "blue",
-    },
-    {
-      icon: <FiPhone />,
-      title: "Call Us",
-      details: ["+880 1234-567890", "+880 9876-543210"],
-      color: "green",
-    },
-    {
-      icon: <FiMail />,
-      title: "Email Us",
-      details: ["info@garmenttrack.com", "support@garmenttrack.com"],
-      color: "purple",
-    },
-    {
-      icon: <FiClock />,
-      title: "Working Hours",
-      details: ["Mon - Fri: 9:00 AM - 6:00 PM", "Sat: 10:00 AM - 4:00 PM"],
-      color: "orange",
-    },
-  ];
-
-  // FAQ
-  const faqs = [
-    {
-      question: "How long does it take to process an order?",
-      answer:
-        "Typically, orders are processed within 2-3 business days. Rush orders can be accommodated with advance notice.",
-    },
-    {
-      question: "What is your minimum order quantity?",
-      answer:
-        "Our minimum order quantity varies by product type. Please contact us for specific details.",
-    },
-    {
-      question: "Do you ship internationally?",
-      answer:
-        "Yes, we ship worldwide. Shipping costs and delivery times vary by destination.",
-    },
-    {
-      question: "Can I track my order?",
-      answer:
-        "Absolutely! Once your order is confirmed, you can track it in real-time through your dashboard.",
-    },
-  ];
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">

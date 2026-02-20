@@ -416,7 +416,7 @@ const AllProducts = () => {
 };
 
 // Product Card Component
-const ProductCard = ({ product, viewMode }) => {
+export const ProductCard = ({ product, viewMode }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
 

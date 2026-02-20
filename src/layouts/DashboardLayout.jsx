@@ -17,8 +17,13 @@ import {
   FiSettings,
   FiTrendingUp,
 } from "react-icons/fi";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import useAuth from "../hooks/useAuth";
+import {
+  adminNavigation,
+  buyerNavigation,
+  managerNavigation,
+} from "../data/data";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,82 +38,19 @@ const DashboardLayout = () => {
     };
   }, []);
 
-  // TODO: Get from your auth context
-  const { user, logout } = useAuth();
-  // const user = {
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   photoURL: "https://i.pravatar.cc/150?img=12",
-  //   role: "admin", // Change to 'admin' or 'manager' to test different views
-  //   status: "approved",
-  // };
+  const { user, logOut } = useAuth();
 
   // Handle logout
   const handleLogout = () => {
-    // TODO: Implement logout
-    navigate("/login");
+    logOut()
+      .then(() => {
+        toast.success("Log-Out success!");
+        navigate("/login");
+      })
+      .catch((error) => {
+        toast.error(error.message || "Logout failed!");
+      });
   };
-
-  // Admin Navigation
-  const adminNavigation = [
-    { name: "Overview", path: "/dashboard", icon: <FiHome />, exact: true },
-    {
-      name: "Manage Users",
-      path: "/dashboard/manage-users",
-      icon: <FiUsers />,
-    },
-    {
-      name: "All Products",
-      path: "/all-products",
-      icon: <FiPackage />,
-    },
-    {
-      name: "All Orders",
-      path: "/dashboard/all-orders",
-      icon: <FiShoppingBag />,
-    },
-    { name: "Analytics", path: "/dashboard/analytics", icon: <FiBarChart /> },
-  ];
-
-  // Manager Navigation
-  const managerNavigation = [
-    { name: "Overview", path: "/dashboard", icon: <FiHome />, exact: true },
-    {
-      name: "Add Product",
-      path: "/dashboard/add-product",
-      icon: <FiPlusCircle />,
-    },
-    {
-      name: "Manage Products",
-      path: "/dashboard/manage-products",
-      icon: <FiList />,
-    },
-    {
-      name: "Pending Orders",
-      path: "/dashboard/pending-orders",
-      icon: <FiClock />,
-    },
-    {
-      name: "Approved Orders",
-      path: "/dashboard/approved-orders",
-      icon: <FiCheckCircle />,
-    },
-  ];
-
-  // Buyer Navigation
-  const buyerNavigation = [
-    { name: "Overview", path: "/dashboard", icon: <FiHome />, exact: true },
-    {
-      name: "My Orders",
-      path: "/dashboard/my-orders",
-      icon: <FiShoppingBag />,
-    },
-    {
-      name: "Track Order",
-      path: "/dashboard/track-order",
-      icon: <FiTrendingUp />,
-    },
-  ];
 
   // Get navigation based on role
   const getNavigation = () => {

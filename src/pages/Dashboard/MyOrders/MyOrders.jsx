@@ -20,6 +20,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
 import ButtonLoader from "../../../components/ButtonLoader";
+import { cancelReasons, orderStatuses } from "../../../data/data";
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -37,26 +38,6 @@ const MyOrders = () => {
 
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
-
-  const orderStatuses = [
-    { id: "all", name: "All Orders" },
-    { id: "pending", name: "Pending" },
-    { id: "confirmed", name: "Confirmed" },
-    { id: "in-production", name: "In Production" },
-    { id: "shipped", name: "Shipped" },
-    { id: "delivered", name: "Delivered" },
-    { id: "cancelled", name: "Cancelled" },
-  ];
-
-  // Cancel reasons
-  const cancelReasons = [
-    "Changed my mind",
-    "Found a better price elsewhere",
-    "Ordered by mistake",
-    "Need to change size/color",
-    "Delivery taking too long",
-    "Other reasons",
-  ];
 
   // Page title
   useEffect(() => {

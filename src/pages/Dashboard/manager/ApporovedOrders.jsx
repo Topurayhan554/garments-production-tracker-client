@@ -19,6 +19,7 @@ import { SkeletonTable } from "../../../components/Loading";
 import ButtonLoader from "../../../components/ButtonLoader";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { toast } from "react-toastify";
+import { productionStatuses } from "../../../data/data";
 
 const ApprovedOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -34,20 +35,6 @@ const ApprovedOrders = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const axiosSecure = useAxiosSecure();
-
-  const productionStatuses = [
-    { id: "all", name: "All Status", value: "all" },
-    { id: "confirmed", name: "Confirmed", value: "confirmed" },
-    { id: "in-production", name: "In Production", value: "in-production" },
-    { id: "quality-check", name: "Quality Check", value: "quality-check" },
-    { id: "packed", name: "Packed", value: "packed" },
-    { id: "in-transit", name: "In Transit", value: "in-transit" },
-    {
-      id: "out-for-delivery",
-      name: "Out for Delivery",
-      value: "out-for-delivery",
-    },
-  ];
 
   // Page title
   useEffect(() => {

@@ -18,6 +18,7 @@ import {
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+
 import { toast } from "react-toastify";
 import { ProductCard } from "../../Product/AllProducts/AllProducts";
 import { bannerImages } from "../../../data/data";

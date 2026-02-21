@@ -23,13 +23,22 @@ import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
 import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
 import CartPage from "../pages/CartPage/CartPage";
 import Profile from "../pages/Dashboard/Profile/Profile";
-import FavoritesPage from "../pages/FavoritePage/FavoritePage";
 import MyOrders from "../pages/Dashboard/buyer/MyOrders/MyOrders";
+import FavoritesDropdown from "../pages/FavoritesDropdown/FavoritesDropdown";
+import FavoritesPage from "../pages/FavoritesDropdown/FavoritePage";
+import Loading from "../components/Loading";
+import NotFound from "../components/NotFound";
+import ErrorPage from "../pages/Errors/Errorpage";
+import AdminRoute from "./Adminroute";
+import ManagerRoute from "./ManagerRoute";
+import Unauthorized from "../components/Unauthorized";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    hydrateFallbackElement: <Loading />,
     children: [
       {
         index: true,
@@ -73,7 +82,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/favorites",
-        element: <FavoritesPage />,
+        element: (
+          <PrivateRoute>
+            <FavoritesPage />
+          </PrivateRoute>
+        ),
       },
     ],
   },
@@ -90,6 +103,10 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
     ],
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
   },
   {
     path: "/dashboard",
@@ -112,43 +129,6 @@ export const router = createBrowserRouter([
         element: <Profile />,
       },
 
-      // admin
-      {
-        path: "manage-users",
-        element: <ManageUsers />,
-      },
-      {
-        path: "all-orders",
-        element: <AllOrders />,
-      },
-      {
-        path: "analytics",
-        element: <Analytics />,
-      },
-
-      // manager
-      {
-        path: "add-product",
-        element: <AddProduct />,
-      },
-      {
-        path: "manage-products",
-        element: <ManageProducts />,
-      },
-
-      {
-        path: "pending-orders",
-        element: <PendingOrders />,
-      },
-      {
-        path: "approved-orders",
-        element: <ApprovedOrders />,
-      },
-      // edit product
-      {
-        path: "edit-product/:id",
-        element: <EditProduct />,
-      },
       // buyer
       {
         path: "my-orders",
@@ -162,6 +142,80 @@ export const router = createBrowserRouter([
         path: "track-order/:trackingNumber",
         element: <TrackOrder />,
       },
+
+      // admin
+      {
+        path: "manage-users",
+        element: (
+          <AdminRoute>
+            <ManageUsers />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "all-orders",
+        element: (
+          <AdminRoute>
+            <AllOrders />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "analytics",
+        element: (
+          <AdminRoute>
+            <Analytics />
+          </AdminRoute>
+        ),
+      },
+
+      // manager
+      {
+        path: "add-product",
+        element: (
+          <ManagerRoute>
+            <AddProduct />
+          </ManagerRoute>
+        ),
+      },
+      {
+        path: "manage-products",
+        element: (
+          <ManagerRoute>
+            <ManageProducts />
+          </ManagerRoute>
+        ),
+      },
+
+      {
+        path: "pending-orders",
+        element: (
+          <ManagerRoute>
+            <PendingOrders />
+          </ManagerRoute>
+        ),
+      },
+      {
+        path: "approved-orders",
+        element: (
+          <ManagerRoute>
+            <ApprovedOrders />
+          </ManagerRoute>
+        ),
+      },
+      // edit product
+      {
+        path: "edit-product/:id",
+        element: (
+          <ManagerRoute>
+            <EditProduct />
+          </ManagerRoute>
+        ),
+      },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);

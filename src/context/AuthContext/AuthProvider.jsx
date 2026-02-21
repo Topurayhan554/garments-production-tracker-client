@@ -10,35 +10,14 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/firebase.init";
 import { GoogleAuthProvider } from "firebase/auth";
-import axios from "axios";
 
-const axiosSecure = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
-});
+import axiosSecure from "../../api/axiosSecure";
 
 const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const requestInterceptor = axiosSecure.interceptors.request.use(
-      async (config) => {
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-          const token = await currentUser.getIdToken();
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error),
-    );
-
-    return () => {
-      axiosSecure.interceptors.request.eject(requestInterceptor);
-    };
-  }, []);
 
   // User DB sync — /users/login endpoint call
   const syncUserWithDatabase = async (firebaseUser) => {

@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import { useCart } from "../../../context/CartContext";
 import CartDropdown from "../../../components/CartDropDown";
 import Loading from "../../../components/Loading";
+import FavoritesDropdown from "../../FavoritesDropdown/FavoritesDropdown";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +26,7 @@ const Navbar = () => {
   const [theme, setTheme] = useState("light");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [favOpen, setFavOpen] = useState(false); // ✅ new state
   const { totalItems } = useCart();
 
   const [favCount, setFavCount] = useState(
@@ -111,7 +113,6 @@ const Navbar = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Loading */}
           {loading ? (
             <Loading />
           ) : (
@@ -184,26 +185,40 @@ const Navbar = () => {
                   )}
                 </button>
 
-                {/* Favorites Icon */}
+                {/* Favorites Icon — now opens dropdown */}
                 {user && (
-                  <Link
-                    to="/favorites"
-                    className="hidden sm:flex w-11 h-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 relative"
-                  >
-                    <FiHeart className="w-5 h-5" />
-                    {favCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
-                        {favCount}
-                      </span>
-                    )}
-                  </Link>
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setFavOpen(!favOpen);
+                        setCartOpen(false); // close cart if open
+                      }}
+                      className="hidden sm:flex w-11 h-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 relative"
+                    >
+                      <FiHeart
+                        className={`w-5 h-5 transition-colors ${favOpen ? "text-pink-500 fill-pink-500" : ""}`}
+                      />
+                      {favCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                          {favCount}
+                        </span>
+                      )}
+                    </button>
+                    <FavoritesDropdown
+                      isOpen={favOpen}
+                      onClose={() => setFavOpen(false)}
+                    />
+                  </div>
                 )}
 
                 {/* Cart Icon */}
                 {user && (
                   <div className="relative">
                     <button
-                      onClick={() => setCartOpen(!cartOpen)}
+                      onClick={() => {
+                        setCartOpen(!cartOpen);
+                        setFavOpen(false); // close favorites if open
+                      }}
                       className="hidden sm:flex w-11 h-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105"
                     >
                       <FiShoppingCart className="w-5 h-5" />
@@ -342,7 +357,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu - loading না হলেই দেখাবে */}
+        {/* Mobile Menu */}
         {!loading && (
           <div
             className={`lg:hidden transition-all duration-300 ease-in-out ${
@@ -440,7 +455,7 @@ const Navbar = () => {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 mb-3"
                   >
-                    <FiHeart className="w-5 h-5" />
+                    <FiHeart className="w-5 h-5 text-pink-500" />
                     <span className="font-medium">My Favorites</span>
                     {favCount > 0 && (
                       <span className="ml-auto min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">

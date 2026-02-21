@@ -22,9 +22,9 @@ import EditProduct from "../pages/Dashboard/manager/EditProduct";
 import TrackOrder from "../pages/Dashboard/buyer/TrackOrder";
 import PlaceOrder from "../pages/Product/PlaceOrder/PlaceOrder";
 import CartPage from "../pages/CartPage/CartPage";
-import MyOrders from "../pages/Dashboard/MyOrders/MyOrders";
 import Profile from "../pages/Dashboard/Profile/Profile";
 import FavoritesPage from "../pages/FavoritePage/FavoritePage";
+import MyOrders from "../pages/Dashboard/buyer/MyOrders/MyOrders";
 
 export const router = createBrowserRouter([
   {
@@ -156,6 +156,10 @@ export const router = createBrowserRouter([
       },
       {
         path: "track-order",
+        element: <TrackOrder />,
+      },
+      {
+        path: "track-order/:trackingNumber",
         element: <TrackOrder />,
       },
     ],

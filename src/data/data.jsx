@@ -25,6 +25,8 @@ import {
   FiHeart,
   FiShield,
   FiGlobe,
+  FiBox,
+  FiTruck,
 } from "react-icons/fi";
 // footer
 export const quickLinks = [
@@ -422,5 +424,51 @@ export const faqs = [
     question: "Can I track my order?",
     answer:
       "Absolutely! Once your order is confirmed, you can track it in real-time through your dashboard.",
+  },
+];
+
+// track order
+export const STATUS_PIPELINE = [
+  {
+    key: "pending",
+    label: "Order Placed",
+    icon: <FiClock className="w-5 h-5" />,
+    description: "Your order has been placed successfully",
+  },
+  {
+    key: "confirmed",
+    label: "Order Confirmed",
+    icon: <FiCheckCircle className="w-5 h-5" />,
+    description: "Order confirmed and being prepared",
+  },
+  {
+    key: "in-production",
+    label: "In Production",
+    icon: <FiBox className="w-5 h-5" />,
+    description: "Product is being manufactured",
+  },
+  {
+    key: "shipped",
+    label: "Shipped",
+    icon: <FiPackage className="w-5 h-5" />,
+    description: "Order packed and dispatched",
+  },
+  {
+    key: "in-transit",
+    label: "In Transit",
+    icon: <FiTruck className="w-5 h-5" />,
+    description: "Package is on the way to your location",
+  },
+  {
+    key: "out-for-delivery",
+    label: "Out for Delivery",
+    icon: <FiTruck className="w-5 h-5" />,
+    description: "Package is out for delivery today",
+  },
+  {
+    key: "delivered",
+    label: "Delivered",
+    icon: <FiHome className="w-5 h-5" />,
+    description: "Package delivered to your address",
   },
 ];

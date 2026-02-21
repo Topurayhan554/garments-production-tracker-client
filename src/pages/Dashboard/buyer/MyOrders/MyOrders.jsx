@@ -15,12 +15,12 @@ import {
   FiShoppingBag,
   FiAlertTriangle,
 } from "react-icons/fi";
-import { SkeletonTable } from "../../../components/Loading";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
-import useAuth from "../../../hooks/useAuth";
+import { SkeletonTable } from "../../../../components/Loading";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
+import useAuth from "../../../../hooks/useAuth";
 import { toast } from "react-toastify";
-import ButtonLoader from "../../../components/ButtonLoader";
-import { cancelReasons, orderStatuses } from "../../../data/data";
+import ButtonLoader from "../../../../components/ButtonLoader";
+import { cancelReasons, orderStatuses } from "../../../../data/data";
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -92,7 +92,7 @@ const MyOrders = () => {
   };
 
   const filteredOrders = getFilteredOrders();
-  console.log(filteredOrders);
+  // console.log(filteredOrders);
 
   // Handle view details
   const handleViewDetails = (order) => {
@@ -530,7 +530,7 @@ const MyOrders = () => {
                             Details
                           </button>
 
-                          {/* ✅ Cancel button - Only show for pending/confirmed */}
+                          {/* Cancel button - Only show for pending/confirmed */}
                           {canCancelOrder(order.status) && (
                             <button
                               onClick={() => handleCancelOrder(order)}

@@ -24,6 +24,17 @@
     <meta property="og:image" content="/logo.svg" />
     <meta property="og:type" content="website" />
   </head>
+
+  <script>
+    (function () {
+      const theme = localStorage.getItem("theme") || "light";
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    })();
+  </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

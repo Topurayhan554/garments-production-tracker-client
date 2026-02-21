@@ -20,10 +20,13 @@ import { motion } from "framer-motion";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { toast } from "react-toastify";
 import { ProductCard } from "../../Product/AllProducts/AllProducts";
-import { bannerImages, steps, testimonials } from "../../../data/data";
+import { bannerImages } from "../../../data/data";
+import Testimonal from "./Testimonal/Testimonials";
+import HowItWorks from "./HowItWorks/HowItWorks";
+import Stats from "./Stats/Stats";
+import Hero from "./Hero/Hero";
 
 const Home = () => {
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [activeBannerImage, setActiveBannerImage] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,14 +64,6 @@ const Home = () => {
     const interval = setInterval(() => {
       setActiveBannerImage((prev) => (prev + 1) % bannerImages.length);
     }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -201,129 +196,7 @@ const Home = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              Welcome to
-              <motion.span
-                className="block bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 bg-clip-text text-transparent mt-2"
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              >
-                GarmentTrack
-              </motion.span>
-            </motion.h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-xl sm:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto"
-          >
-            Your complete solution for managing garment production and orders.
-            Track, manage, and deliver with confidence.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <Link
-              to="/all-products"
-              className="group px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
-            >
-              <FiZap className="w-5 h-5" />
-              <span>Browse Products</span>
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            <Link
-              to="/register"
-              className="px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
-            >
-              Get Started Free
-            </Link>
-          </motion.div>
-
-          {/* Trust Badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.8 }}
-            className="mt-16 flex flex-wrap justify-center gap-8 text-white/80"
-          >
-            {[
-              { icon: <FiShield />, text: "Secure Payments" },
-              { icon: <FiCheckCircle />, text: "Quality Guaranteed" },
-              { icon: <FiClock />, text: "Fast Delivery" },
-            ].map((badge, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.1 }}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                {badge.icon}
-                <span>{badge.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Banner Image Navigation Dots */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="mt-12 flex justify-center gap-3"
-          >
-            {bannerImages.map((_, index) => (
-              <motion.button
-                key={index}
-                onClick={() => setActiveBannerImage(index)}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                className={`rounded-full transition-all duration-300 ${
-                  index === activeBannerImage
-                    ? "bg-white w-8 h-3"
-                    : "bg-white/50 w-3 h-3 hover:bg-white/75"
-                }`}
-              />
-            ))}
-          </motion.div>
-
-          {/* Banner Image Info */}
-          <motion.div
-            key={activeBannerImage}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mt-6 text-white"
-          >
-            <h3 className="text-2xl font-bold">
-              {bannerImages[activeBannerImage].caption}
-            </h3>
-            <p className="text-blue-100 mt-2">
-              {bannerImages[activeBannerImage].description}
-            </p>
-          </motion.div>
-        </div>
+        <Hero />
 
         {/* Scroll Indicator */}
         <motion.div
@@ -342,38 +215,7 @@ const Home = () => {
       </section>
 
       {/* Stats Section with Counter Animation */}
-      <section className="py-16 bg-white dark:bg-gray-800 -mt-20 relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, delay: index * 0.2 }}
-                  className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl mx-auto mb-4"
-                >
-                  {stat.icon}
-                </motion.div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {stat.number}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <Stats />
 
       {/* Featured Products Section - DB Integration */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">
@@ -446,181 +288,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 bg-white dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              How It Works
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              Simple steps to get started with GarmentTrack
-            </p>
-          </motion.div>
+      {/* how is works section */}
+      <HowItWorks />
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                className="relative group"
-              >
-                {/* Connecting Line */}
-                {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-16 left-full w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 -z-10">
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.2, duration: 0.5 }}
-                      className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
-                      style={{ transformOrigin: "left" }}
-                    />
-                  </div>
-                )}
-
-                <div className="text-center">
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="relative inline-block mb-6"
-                  >
-                    <div
-                      className={`w-32 h-32 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center text-white text-4xl shadow-xl`}
-                    >
-                      {step.icon}
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-2xl font-bold text-gray-900 dark:text-white shadow-lg border-4 border-blue-600">
-                      {step.step}
-                    </div>
-                  </motion.div>
-
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    {step.title}
-                  </h3>
-
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {step.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Customer Testimonials */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              What Our Customers Say
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              Real feedback from real customers
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12 relative overflow-hidden">
-              {/* Background Decoration */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full filter blur-3xl"></div>
-
-              {/* Quote Icon */}
-              <div className="absolute top-8 left-8 text-blue-600 opacity-10">
-                <svg
-                  className="w-20 h-20"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
-                </svg>
-              </div>
-
-              <motion.div
-                key={activeTestimonial}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.5 }}
-                className="relative z-10"
-              >
-                <div className="flex flex-col items-center text-center mb-8">
-                  <motion.img
-                    whileHover={{ scale: 1.1 }}
-                    src={testimonials[activeTestimonial].image}
-                    alt={testimonials[activeTestimonial].name}
-                    className="w-24 h-24 rounded-full border-4 border-blue-600 mb-4 shadow-xl"
-                  />
-
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(testimonials[activeTestimonial].rating)].map(
-                      (_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.1 }}
-                        >
-                          <FiStar className="w-6 h-6 text-yellow-400 fill-yellow-400" />
-                        </motion.div>
-                      ),
-                    )}
-                  </div>
-
-                  <p className="text-xl text-gray-700 dark:text-gray-300 italic mb-6">
-                    "{testimonials[activeTestimonial].comment}"
-                  </p>
-
-                  <h4 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {testimonials[activeTestimonial].name}
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {testimonials[activeTestimonial].role}
-                  </p>
-                </div>
-
-                {/* Dots Navigation */}
-                <div className="flex justify-center gap-2">
-                  {testimonials.map((_, index) => (
-                    <motion.button
-                      key={index}
-                      onClick={() => setActiveTestimonial(index)}
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`rounded-full transition-all duration-300 ${
-                        index === activeTestimonial
-                          ? "bg-blue-600 w-8 h-3"
-                          : "bg-gray-300 dark:bg-gray-600 w-3 h-3"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* testimonials */}
+      <Testimonal />
 
       {/* CTA Section */}
       <section className="relative py-20 overflow-hidden">

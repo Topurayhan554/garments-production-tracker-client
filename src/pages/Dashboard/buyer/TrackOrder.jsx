@@ -110,7 +110,6 @@ const statusConfig = (status) => {
   }
 };
 
-//Component
 
 const TrackOrder = () => {
   // trackingNumber is OPTIONAL — undefined when visiting /track-order

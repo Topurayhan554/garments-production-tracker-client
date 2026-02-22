@@ -42,7 +42,7 @@ const ContactUs = () => {
     setSubmitSuccess(false);
 
     try {
-      console.log("Contact form data:", data);
+      // console.log("Contact form data:", data);
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));

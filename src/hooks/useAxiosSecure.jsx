@@ -5,9 +5,8 @@ import { useNavigate } from "react-router";
 import { auth } from "../firebase/firebase.init";
 
 const axiosSecure = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://garments-production-tracker-server.vercel.app",
 });
-
 const useAxiosSecure = () => {
   const { user, logOut } = useAuth();
   const navigate = useNavigate();

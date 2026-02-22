@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "garments-production-trac-2075a",
+    "prod": "garments-production-trac-2075a"
+  },
+  "targets": {},
+  "etags": {}
+}

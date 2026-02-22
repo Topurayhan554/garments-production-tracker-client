@@ -624,54 +624,80 @@ garments-tracker-frontend/
 ├── src/
 │   ├── components/
 │   │   ├── ErrorBoundary.jsx
+│   │   ├── ButtonLoader.jsx
+│   │   ├── CartDropDown.jsx
 │   │   ├── Loading.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   └── RoleBasedRoute.jsx
+│   │   ├── NotFound.jsx
+│   │   ├── PageLoader.jsx
+│   │   ├── Unauthorized.jsx
+│   ├── Context/
+│   │   ├── AuthContext.jsx
+│   │   ├── AuthProvider.jsx
+│   │   └── CartContext.jsx
+│   ├── data/
+│   │   ├── data.jsx
+│   ├── firebase/
+│   │   ├── firebase.init.js
 │   ├── hooks/
 │   │   ├── useAuth.jsx
+│   │   ├── useRole.jsx
 │   │   └── useAxiosSecure.jsx
 │   ├── layouts/
-│   │   ├── MainLayout.jsx
+│   │   ├── RootLayout.jsx
+│   │   ├── AuthLayout.jsx
 │   │   └── DashboardLayout.jsx
 │   ├── pages/
-│   │   ├── Home/
+│   │   ├── Auth/
+│   │   │   ├── Login/
+│   │   │   ├── Register/
+│   │   │   └── SocialLogin/
+│   │   ├── CartPage/
 │   │   ├── Dashboard/
 │   │   │   ├── Admin/
 │   │   │   ├── Manager/
-│   │   │   └── Buyer/
-│   │   └── Errors/
-│   ├── providers/
-│   │   └── AuthProvider.jsx
+│   │   │   ├── Buyer/
+│   │   │   ├── Overview/
+│   │   │   └── Profile/
+│   │   ├── Errors/
+│   │   ├── Home/
+│   │   │   ├── AboutUs/
+│   │   │   ├── ContactUs/
+│   │   │   ├── ContactUs/
+│   │   │   └── Home/
+│   │   ├── Product/
+│   │   │   ├── AllProduct.jsx
+│   │   │   ├── PlaceOrder.jsx
+│   │   │   ├── ProductDetails.jsx
+│   │   ├── Shared/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   ├── router/
+│   │   ├── AdminRoute.jsx
+│   │   ├── ManagerRoute.jsx
+│   │   ├── PrivateRoute.jsx
+│   │   └── router.jsx
 │   ├── App.jsx
 │   ├── main.jsx
 │   └── index.css
 ├── .env
-├── .env.production
+├── .gitignore
+├── eslint.config.js
+├── firebase.json
+├── index.html
+├── package-locak.json
 ├── package.json
-├── tailwind.config.js
-├── vite.config.js
-└── README.md
+├── README.md
+└── vite.config.js
 ```
 
 ### Backend Structure
 
 ```
 garments-tracker-backend/
-├── config/
-│   └── db.js
-├── middleware/
-│   ├── auth.js
-│   └── errorHandler.js
-├── routes/
-│   ├── users.js
-│   ├── products.js
-│   └── orders.js
-├── models/
-│   ├── User.js
-│   ├── Product.js
-│   └── Order.js
-├── utils/
-│   └── firebase.js
+├── .vercel
+├── node_modules
+├── .gitignore
+├── firebase-adminsdk-json
 ├── .env
 ├── index.js
 ├── package.json

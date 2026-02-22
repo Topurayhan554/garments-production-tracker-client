@@ -1,8 +1,6 @@
 # 🏭 Garments Production Tracker
 
 A comprehensive full-stack web application for managing garment production orders, tracking order status, and streamlining the manufacturing workflow from order placement to delivery.
-
-[![Live Demo]([[https://ibb.co.com/bgR6dStw](https://i.ibb.co.com/jvZ84ct0/...png](https://i.ibb.co.com/H8qs1HH/screencapture-garments-production-trac-2075a-web-app-2026-02-22-15-06-24.png)))](https://garments-production-trac-2075a.web.app/)
 ## 🌐 Live Links
 
 - **Frontend**: [https://garments-production-trac-2075a.web.app/](https://garments-production-trac-2075a.web.app/)
@@ -230,11 +228,11 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Clone frontend
-git clone https://github.com/yourusername/garments-tracker-frontend.git
+git clone https://github.com/Topurayhan554/garments-tracker-frontend.git
 cd garments-tracker-frontend
 
 # Clone backend
-git clone https://github.com/yourusername/garments-tracker-backend.git
+git clone https://github.com/Topurayhan554/garments-tracker-backend.git
 cd garments-tracker-backend
 ```
 
@@ -721,7 +719,7 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Developer
 
-Developed with ❤️ by [Your Name]
+Developed with ❤️ by [Topu Rayhan]
 
 ## 🙏 Acknowledgments
 
@@ -736,14 +734,14 @@ Developed with ❤️ by [Your Name]
 
 ## 📞 Support
 
-For support, email your-email@example.com or create an issue in the repository.
+For support, email topurayhantipu@gmail.com or create an issue in the repository.
 
 ## 🔗 Links
 
 - [Live Demo](https://garments-production-trac-2075a.web.app/)
 - [API Documentation](https://garments-production-tracker-server.vercel.app/)
-- [Report Bug](https://github.com/yourusername/garments-tracker/issues)
-- [Request Feature](https://github.com/yourusername/garments-tracker/issues)
+- [Report Bug](https://github.com/Topurayhan554/garments-tracker/issues)
+- [Request Feature](https://github.com/Topurayhan554/garments-tracker/issues)
 
 ---
 

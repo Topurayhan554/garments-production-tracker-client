@@ -228,25 +228,25 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Clone frontend
-git clone https://github.com/Topurayhan554/garments-tracker-frontend.git
-cd garments-tracker-frontend
+git clone https://github.com/Topurayhan554/garments-production-tracker-client.git
+cd garments-production-tracker-client
 
 # Clone backend
-git clone https://github.com/Topurayhan554/garments-tracker-backend.git
-cd garments-tracker-backend
+git clone https://github.com/Topurayhan554/garments-product-tracks-server.git
+cd garments-product-tracks-server
 ```
 
 #### 2. Install Frontend Dependencies
 
 ```bash
-cd garments-tracker-frontend
+cd garments-production-tracker-client
 npm install
 ```
 
 #### 3. Install Backend Dependencies
 
 ```bash
-cd garments-tracker-backend
+cd garments-product-tracks-server
 npm install
 ```
 
@@ -286,7 +286,7 @@ CLIENT_URL=http://localhost:5173
 **Start Backend Server:**
 
 ```bash
-cd garments-tracker-backend
+cd garments-product-tracks-server
 npm run dev
 # Server runs on http://localhost:3000
 ```
@@ -294,7 +294,7 @@ npm run dev
 **Start Frontend Development Server:**
 
 ```bash
-cd garments-tracker-frontend
+cd garments-product-tracks-client
 npm run dev
 # App runs on http://localhost:5173
 ```
@@ -740,8 +740,8 @@ For support, email topurayhantipu@gmail.com or create an issue in the repository
 
 - [Live Demo](https://garments-production-trac-2075a.web.app/)
 - [API Documentation](https://garments-production-tracker-server.vercel.app/)
-- [Report Bug](https://github.com/Topurayhan554/garments-tracker/issues)
-- [Request Feature](https://github.com/Topurayhan554/garments-tracker/issues)
+- [Report Bug](https://github.com/Topurayhan554/garments-product-tracker-client/issues)
+- [Request Feature](https://github.com/Topurayhan554/garments-product-tracker-server/issues)
 
 ---
 
